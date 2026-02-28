@@ -19,9 +19,6 @@ import { loadMeta } from '../metaState';
 import { computeUpgradeBonuses } from '../upgradeTree';
 import { getLevelById } from '../levels';
 
-const MAP_WIDTH = 40;
-const MAP_HEIGHT = 30;
-
 export class GameScene extends Phaser.Scene {
     private gameState!: GameState;
     private mapGraphics!: Phaser.GameObjects.Graphics;
@@ -53,6 +50,8 @@ export class GameScene extends Phaser.Scene {
     private levelFailed = false;
     private monthsElapsed = 0;
     private levelTimeLimit = 36; // months before time-out loss
+    private mapWidth = 40;
+    private mapHeight = 30;
 
     // Audio State
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -80,6 +79,8 @@ export class GameScene extends Phaser.Scene {
         // Pull time limit and other config from the levels designer file
         const levelDef = getLevelById(this.levelId ?? '');
         this.levelTimeLimit = levelDef?.timeLimitMonths ?? 36;
+        this.mapWidth = levelDef?.mapWidth ?? 40;
+        this.mapHeight = levelDef?.mapHeight ?? 30;
     }
 
     preload(): void {
@@ -98,7 +99,13 @@ export class GameScene extends Phaser.Scene {
         const meta = loadMeta();
         const upgrades = computeUpgradeBonuses(meta);
 
-        const map = generateMap(MAP_WIDTH, MAP_HEIGHT, Math.floor(Math.random() * 999999));
+        const levelDef = getLevelById(this.levelId ?? '');
+        const seed = levelDef?.mapSeed ?? Math.floor(Math.random() * 999999);
+
+        const map = generateMap(this.mapWidth, this.mapHeight, seed, {
+            minCityDistance: levelDef?.minCityDistance,
+            targetCities: levelDef?.targetCities
+        });
         this.gameState = createGameState(map, upgrades);
 
         this.mapGraphics = this.add.graphics();
@@ -115,8 +122,8 @@ export class GameScene extends Phaser.Scene {
             this.cameras.main.centerOn(startPx.x, startPx.y);
         }
 
-        const worldW = MAP_WIDTH * HEX_SIZE * 2;
-        const worldH = MAP_HEIGHT * HEX_SIZE * 2;
+        const worldW = this.mapWidth * HEX_SIZE * 2;
+        const worldH = this.mapHeight * HEX_SIZE * 2;
         this.cameras.main.setBounds(-100, -100, worldW + 200, worldH + 200);
         this.cameras.main.setZoom(1.5);
 
@@ -229,8 +236,8 @@ export class GameScene extends Phaser.Scene {
     private drawMap(): void {
         this.mapGraphics.clear();
 
-        for (let r = 0; r < MAP_HEIGHT; r++) {
-            for (let q = 0; q < MAP_WIDTH; q++) {
+        for (let r = 0; r < this.mapHeight; r++) {
+            for (let q = 0; q < this.mapWidth; q++) {
                 const hex: HexCoord = { q, r };
                 const key = hexKey(hex);
                 const terrain = this.gameState.map.terrain.get(key);
@@ -538,8 +545,8 @@ export class GameScene extends Phaser.Scene {
             // Update hover hex
             const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
             this.hoverHex = pixelToHex({ x: worldPoint.x, y: worldPoint.y });
-            if (this.hoverHex.q < 0 || this.hoverHex.q >= MAP_WIDTH ||
-                this.hoverHex.r < 0 || this.hoverHex.r >= MAP_HEIGHT) {
+            if (this.hoverHex.q < 0 || this.hoverHex.q >= this.mapWidth ||
+                this.hoverHex.r < 0 || this.hoverHex.r >= this.mapHeight) {
                 this.hoverHex = null;
             }
 
@@ -838,33 +845,42 @@ export class GameScene extends Phaser.Scene {
 
     private setupUI(): void {
         document.querySelectorAll('.action-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            (btn as HTMLElement).onclick = () => {
                 const tool = btn.getAttribute('data-tool') as Tool;
                 if (tool) this.setTool(tool);
-            });
+            };
         });
 
         document.querySelectorAll('.speed-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            (btn as HTMLElement).onclick = () => {
                 const speed = parseInt(btn.getAttribute('data-speed') || '1');
                 this.gameState.speed = speed as GameState['speed'];
                 this.updateSpeedButtons();
-            });
+            };
         });
 
-        document.getElementById('btn-info')?.addEventListener('click', () => {
-            document.getElementById('info-panel')?.classList.toggle('collapsed');
-        });
+        const btnInfo = document.getElementById('btn-info');
+        if (btnInfo) {
+            btnInfo.onclick = () => document.getElementById('info-panel')?.classList.toggle('collapsed');
+        }
+
+        // Info panel: inner close button
+        const btnClose = document.getElementById('info-panel-close');
+        if (btnClose) {
+            btnClose.onclick = () => document.getElementById('info-panel')?.classList.add('collapsed');
+        }
 
         // Train panel: click train count to open
-        document.getElementById('trains-display')?.addEventListener('click', () => {
-            this.toggleTrainPanel(true);
-        });
+        const trainsDisplay = document.getElementById('trains-display');
+        if (trainsDisplay) {
+            trainsDisplay.onclick = () => this.toggleTrainPanel(true);
+        }
 
         // Train panel: close button
-        document.getElementById('train-panel-close')?.addEventListener('click', () => {
-            this.toggleTrainPanel(false);
-        });
+        const btnTrainClose = document.getElementById('train-panel-close');
+        if (btnTrainClose) {
+            btnTrainClose.onclick = () => this.toggleTrainPanel(false);
+        }
 
         // Train panel: backdrop close
         document.querySelector('#train-panel .modal-panel-backdrop')?.addEventListener('click', () => {
@@ -916,8 +932,8 @@ export class GameScene extends Phaser.Scene {
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
 
-                const mapQ = (x / rect.width) * MAP_WIDTH;
-                const mapR = (y / rect.height) * MAP_HEIGHT;
+                const mapQ = (x / rect.width) * this.mapWidth;
+                const mapR = (y / rect.height) * this.mapHeight;
 
                 const targetPx = hexToPixel({ q: Math.floor(mapQ), r: Math.floor(mapR) });
                 this.cameras.main.centerOn(targetPx.x, targetPx.y);
@@ -1223,8 +1239,8 @@ export class GameScene extends Phaser.Scene {
         ctx.fillStyle = '#1a1a22';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        const scaleX = canvas.width / MAP_WIDTH;
-        const scaleY = canvas.height / MAP_HEIGHT;
+        const scaleX = canvas.width / this.mapWidth;
+        const scaleY = canvas.height / this.mapHeight;
 
         this.gameState.map.terrain.forEach((terrain: string, key: string) => {
             const [q, r] = key.split(',').map(Number);

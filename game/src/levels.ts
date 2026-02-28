@@ -47,6 +47,10 @@ export interface LevelDefinition {
     stars: StarThresholds;
     mapSeed?: number;           // Optional fixed map seed (omit for random)
     startingFunds?: number;     // Override default $50,000 if set
+    mapWidth?: number;          // Custom map width (default 40)
+    mapHeight?: number;         // Custom map height (default 30)
+    minCityDistance?: number;   // Override city spacing (default 5)
+    targetCities?: number;      // Override max spawned cities
 }
 
 // ============================================
@@ -66,8 +70,13 @@ export const LEVELS: LevelDefinition[] = [
         chapter: 1,
         name: 'First Track',
         description: 'Learn the basics. Connect two cities and run your first train.',
-        timeLimitMonths: 180,
-        bankruptcyThreshold: -5000,
+        timeLimitMonths: 240,
+        bankruptcyThreshold: -15000,
+        mapWidth: 20,
+        mapHeight: 15,
+        minCityDistance: 3,
+        targetCities: 5,
+        startingFunds: 70000,
         objective: {
             type: 'connect_cities',
             target: 2,
@@ -86,7 +95,12 @@ export const LEVELS: LevelDefinition[] = [
         name: 'The Freight Run',
         description: 'Freight pays the bills. Get your monthly income above $500.',
         timeLimitMonths: 240,
-        bankruptcyThreshold: -5000,
+        bankruptcyThreshold: -10000,
+        mapWidth: 24,
+        mapHeight: 18,
+        minCityDistance: 3,
+        targetCities: 6,
+        startingFunds: 60000,
         objective: {
             type: 'monthly_income',
             target: 500,
@@ -105,7 +119,12 @@ export const LEVELS: LevelDefinition[] = [
         name: 'Station Master',
         description: 'Expand your network. Build stations across the region.',
         timeLimitMonths: 240,
-        bankruptcyThreshold: -5000,
+        bankruptcyThreshold: -10000,
+        mapWidth: 28,
+        mapHeight: 21,
+        minCityDistance: 4,
+        targetCities: 8,
+        startingFunds: 50000,
         objective: {
             type: 'build_stations',
             target: 3,
@@ -121,14 +140,19 @@ export const LEVELS: LevelDefinition[] = [
     {
         id: 'ch1_l4',
         chapter: 1,
-        name: 'Mountain Bypass',
-        description: 'Rugged terrain ahead. Connect cities across difficult terrain.',
-        timeLimitMonths: 300,
-        bankruptcyThreshold: -8000,
+        name: 'The Expanding Frontier',
+        description: 'A vast, sparse landscape. Connect 4 cities without going bankrupt. Resources are highly spread out.',
+        timeLimitMonths: 180,
+        bankruptcyThreshold: 0,
+        mapWidth: 40,
+        mapHeight: 30,
+        minCityDistance: 7,
+        targetCities: 8,
+        startingFunds: 30000,
         objective: {
             type: 'connect_cities',
-            target: 3,
-            label: 'Connect 3 cities',
+            target: 4,
+            label: 'Connect 4 cities',
         },
         stars: {
             // 3★: connected 3 cities quickly, still profitable

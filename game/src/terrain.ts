@@ -145,7 +145,12 @@ export interface GameMap {
     resources: Map<string, string>;
 }
 
-export function generateMap(width: number, height: number, seed: number = Date.now()): GameMap {
+export interface MapConfig {
+    minCityDistance?: number;
+    targetCities?: number;
+}
+
+export function generateMap(width: number, height: number, seed: number = Date.now(), config?: MapConfig): GameMap {
     const noise = new SimpleNoise(seed);
     const moisture = new SimpleNoise(seed + 1000);
     const terrain = new Map<string, TerrainType>();
@@ -216,8 +221,8 @@ export function generateMap(width: number, height: number, seed: number = Date.n
     // Place cities
     const cities: CityData[] = [];
     const namePool = [...CITY_NAMES].sort(() => Math.random() - 0.5);
-    const MIN_CITY_DISTANCE = 5;
-    const TARGET_CITIES = Math.min(15, Math.floor((width * height) / 60));
+    const MIN_CITY_DISTANCE = config?.minCityDistance ?? 5;
+    const TARGET_CITIES = config?.targetCities ?? Math.min(15, Math.floor((width * height) / 60));
 
     const suitableHexes: HexCoord[] = [];
     terrain.forEach((type, key) => {
