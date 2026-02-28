@@ -39,45 +39,51 @@ export class LevelCompleteScene extends Phaser.Scene {
         ).join(' ');
 
         container.innerHTML = `
-        <div class="level-complete-card">
-            <div class="lc-header">
-                <div class="lc-icon">🏆</div>
-                <h2 class="lc-title">Level Complete!</h2>
-                <div class="lc-level-name">${data.levelName}</div>
-            </div>
-
-            <div class="lc-stars" style="display:flex; justify-content:center; gap:8px; margin: 16px 0;">${starsHtml}</div>
-
-            <div class="lc-stats">
-                <div class="lc-stat">
-                    <span class="lc-stat-label">Revenue Earned</span>
-                    <span class="lc-stat-value">$${data.totalRevenue.toLocaleString()}</span>
+        <div class="level-complete-backdrop">
+            <div class="lc-glow"></div>
+            <div class="level-complete-card">
+                <div class="lc-header">
+                    <div class="lc-title-badge">LEVEL COMPLETE</div>
+                    <div class="lc-level-name">${data.levelName}</div>
                 </div>
-                <div class="lc-stat">
-                    <span class="lc-stat-label">Funds Remaining</span>
-                    <span class="lc-stat-value">$${data.fundsRemaining.toLocaleString()}</span>
-                </div>
-                <div class="lc-stat">
-                    <span class="lc-stat-label">Months Used</span>
-                    <span class="lc-stat-value">${data.monthsUsed}</span>
-                </div>
-            </div>
 
-            <div class="lc-rp-reward ${rpEarned > 0 ? 'rp-earned' : ''}">
-                <span class="lc-rp-icon"><img src="assets/ui/icon_rp.png" style="width:28px; height:28px; object-fit:contain; vertical-align:middle;" alt="RP"></span>
-                <span class="lc-rp-text">
+                <div class="lc-stars" style="display:flex; justify-content:center; gap:10px; margin: 20px 0;">${starsHtml}</div>
+
+                <div class="lc-star-legend">
+                    <span>1★ Complete</span>
+                    <span>2★ Profitable</span>
+                    <span>3★ Fast</span>
+                </div>
+
+                <div class="lc-stats-card">
+                    <div class="lc-stat">
+                        <span class="lc-stat-label">Revenue Earned</span>
+                        <span class="lc-stat-value gold">$${data.totalRevenue.toLocaleString()}</span>
+                    </div>
+                    <div class="lc-stat">
+                        <span class="lc-stat-label">Funds Remaining</span>
+                        <span class="lc-stat-value">$${data.fundsRemaining.toLocaleString()}</span>
+                    </div>
+                    <div class="lc-stat">
+                        <span class="lc-stat-label">Months Used</span>
+                        <span class="lc-stat-value">${data.monthsUsed}</span>
+                    </div>
+                </div>
+
+                <div class="lc-rp-reward ${rpEarned > 0 ? 'rp-earned' : ''}">
+                    <img src="assets/ui/icon_rp.png" style="width:22px; height:22px; object-fit:contain; vertical-align:middle;" alt="RP">
                     ${rpEarned > 0
-                ? `+${rpEarned} RP earned! ${isImprovement ? '(New best!)' : ''}`
-                : `${totalRP} RP (no improvement over previous best)`}
-                </span>
-            </div>
+                ? `<span>+${rpEarned} RP earned! ${isImprovement ? '🎉 New best!' : ''}</span>`
+                : `<span>${totalRP} RP (no improvement)</span>`}
+                </div>
 
-            <div class="lc-rp-total">Total RP: ${Math.floor(meta.researchPoints)}</div>
-
-            <div class="lc-actions">
-                <button class="lc-btn primary" id="lc-next">Next Level →</button>
-                <button class="lc-btn secondary" id="lc-replay">↺ Replay</button>
-                <button class="lc-btn tertiary" id="lc-hub">🗺️ World Map</button>
+                <div class="lc-actions">
+                    <button class="lc-btn primary" id="lc-next">NEXT LEVEL →</button>
+                    <div class="lc-secondary-actions">
+                        <button class="lc-btn secondary" id="lc-replay">↺ Replay</button>
+                        <button class="lc-btn tertiary" id="lc-hub">🗺️ Map</button>
+                    </div>
+                </div>
             </div>
         </div>`;
 

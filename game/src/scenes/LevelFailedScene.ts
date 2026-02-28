@@ -41,40 +41,43 @@ export class LevelFailedScene extends Phaser.Scene {
         const copy = REASON_COPY[data.reason];
 
         container.innerHTML = `
-        <div class="level-failed-card">
-            <div class="lf-header">
-                <div class="lf-icon">${copy.icon}</div>
-                <h2 class="lf-title">${copy.title}</h2>
-                <div class="lf-level-name">${data.levelName}</div>
-            </div>
-
-            <div class="lf-subtitle">${copy.subtitle}</div>
-
-            <div class="lf-stats">
-                ${data.reason === 'timeout' ? `
-                <div class="lf-stat">
-                    <span class="lf-stat-label">Time Limit</span>
-                    <span class="lf-stat-value">${data.timeLimit} months</span>
+        <div class="level-failed-backdrop">
+            <div class="lf-glow"></div>
+            <div class="level-failed-card">
+                <div class="lf-header">
+                    <div class="lf-reason-icon">${copy.icon}</div>
+                    <h2 class="lf-title">${copy.title}</h2>
+                    <div class="lf-level-name">${data.levelName}</div>
                 </div>
-                <div class="lf-stat">
-                    <span class="lf-stat-label">Months Used</span>
-                    <span class="lf-stat-value">${data.monthsUsed}</span>
-                </div>` : `
-                <div class="lf-stat">
-                    <span class="lf-stat-label">Funds at Failure</span>
-                    <span class="lf-stat-value negative">$${data.fundsAtFail.toLocaleString()}</span>
+
+                <div class="lf-subtitle">${copy.subtitle}</div>
+
+                <div class="lf-stats-card">
+                    ${data.reason === 'timeout' ? `
+                    <div class="lf-stat">
+                        <span class="lf-stat-label">Time Limit</span>
+                        <span class="lf-stat-value">${data.timeLimit} months</span>
+                    </div>
+                    <div class="lf-stat">
+                        <span class="lf-stat-label">Months Used</span>
+                        <span class="lf-stat-value">${data.monthsUsed}</span>
+                    </div>` : `
+                    <div class="lf-stat">
+                        <span class="lf-stat-label">Funds at Failure</span>
+                        <span class="lf-stat-value negative">$${data.fundsAtFail.toLocaleString()}</span>
+                    </div>
+                    <div class="lf-stat">
+                        <span class="lf-stat-label">Months Survived</span>
+                        <span class="lf-stat-value">${data.monthsUsed}</span>
+                    </div>`}
                 </div>
-                <div class="lf-stat">
-                    <span class="lf-stat-label">Months Survived</span>
-                    <span class="lf-stat-value">${data.monthsUsed}</span>
-                </div>`}
-            </div>
 
-            <div class="lf-tip">${copy.tip}</div>
+                <div class="lf-tip">${copy.tip}</div>
 
-            <div class="lf-actions">
-                <button class="lf-btn primary" id="lf-retry">↺ Retry Level</button>
-                <button class="lf-btn secondary" id="lf-hub">🗺️ World Map</button>
+                <div class="lf-actions">
+                    <button class="lf-btn primary" id="lf-retry">↺ TRY AGAIN</button>
+                    <button class="lf-btn secondary" id="lf-hub">🗺️ BACK TO MAP</button>
+                </div>
             </div>
         </div>`;
 
