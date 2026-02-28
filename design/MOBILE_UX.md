@@ -54,16 +54,16 @@
 
 ## Top HUD (Minimal)
 
-Keep the mobile HUD to **3–4 items max**:
+Keep the mobile HUD to **3 items max** during a level. RP is **never shown during gameplay** — it lives exclusively on the Meta-Hub screen between levels.
 
 | Item | Always Visible | Tap Action |
 |---|---|---|
 | 💰 Balance | ✅ | Opens economy details |
 | 📅 Date/Speed | ✅ | Tap to cycle speed |
 | 🎯 Objective | ✅ | Opens objectives sheet |
-| 🔬 Research RP | Chapter 2+ | Opens tech tree |
 
 > Remove: Income/Expenses/Net from always-visible HUD. Move to expanded economy sheet (tap balance to see).
+> Research Points (RP) are never displayed during a level. They appear only on the world map and upgrade hub.
 
 ---
 
@@ -128,6 +128,49 @@ Keep the mobile HUD to **3–4 items max**:
 │  [ Try Again ]  [ Menu ]     │
 └──────────────────────────────┘
 ```
+
+---
+
+## Meta-Hub Screen (Between Levels)
+
+The Meta-Hub is the **world map screen** the player returns to after every level. It is the only place RP is visible and spendable.
+
+```
+┌──────────────────────────────────────────┐  ← Safe area
+│  👑 Railway Manager    🔬 RP: 340        │  ← Career rank + RP balance
+├──────────────────────────────────────────┤
+│                                          │
+│        [ WORLD MAP / CHAPTER SELECT ]    │  ← Tap chapter to expand levels
+│                                          │
+│   Ch.1 Valley ████████░░  8/10 ⭐ 23     │
+│   Ch.2 Industrial ░░░░░░  locked         │
+│                                          │
+├──────────────────────────────────────────┤
+│  [ 🔬 Upgrade Hub ]   [ 👤 Profile ]     │  ← Bottom nav
+│  [ 📅 Daily Challenge ] [ ⚙️ Settings ]  │
+└──────────────────────────────────────────┘
+```
+
+### Upgrade Hub Entry Point
+
+Tapping **🔬 Upgrade Hub** slides in the full 3-branch upgrade grid (see `PROGRESSION.md` for the upgrade tree):
+
+```
+┌──────────────────────────────────────────┐
+│  🔬 Upgrade Hub              RP: 340   ✕ │
+├──────────────┬───────────────┬────────────┤
+│  🛤️ Tracks   │  🚂 Engines   │  🚃 Cars   │
+│              │               │            │
+│  T1 ✅ 80RP  │  E1 ✅ 80RP  │ C1 ✅ 60RP │
+│  T2 🔒 150RP │  E2 🔒 150RP │ C2 🔒 100RP│
+│  T3 🔒 250RP │  E3 🔒 250RP │ C3 🔒 200RP│
+│  ...         │  ...          │ ...        │
+└──────────────┴───────────────┴────────────┘
+│               [ Buy — 150 RP ]            │
+└──────────────────────────────────────────┘
+```
+
+> Selecting a node shows its name, effect description, RP cost, and a **Buy** button. The button is greyed out if the player has insufficient RP or the previous tier is not purchased.
 
 ---
 

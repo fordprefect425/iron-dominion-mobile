@@ -104,7 +104,7 @@ interface LevelConfig {
   available: {
     trainTypes: TrainType[];
     stationTypes: StationType[];
-    techEras: Era[];
+    // Note: no techEras — upgrades are applied globally via the Meta-Hub, not per-level
   };
   objectives: {
     primary: Objective;
@@ -114,6 +114,36 @@ interface LevelConfig {
   timeLimitMonths: number | null;
 }
 ```
+
+---
+
+## Persistent Player State
+
+RP and upgrades are **global and persistent** — they must survive app restarts, device switches, and level replays.
+
+### What Gets Persisted
+
+| State | Storage | Notes |
+|---|---|---|
+| RP balance | `@capacitor/preferences` (key-value) | Simple integer |
+| Purchased upgrades | `@capacitor/preferences` or SQLite | Array of upgrade node IDs |
+| Level star ratings | SQLite (via `@capacitor-community/sqlite`) | Per-level record |
+| Career rank | Derived from level records | Computed, not stored |
+
+### Upgrade Application Flow
+
+```
+Player taps "Play Level"
+  ↓
+Load purchased upgrades from storage
+  ↓
+Apply upgrade bonuses → modify level config at runtime
+  (e.g. T1 Steel Rails → trackCostMultiplier: 0.9)
+  ↓
+Level starts with bonuses already baked in
+```
+
+> The level JSON config `trackCostMultiplier`, `revenueMultiplier` etc. are the tuning knobs that upgrades modify at runtime. Level designers set baseline values; upgrades shift them.
 
 ---
 

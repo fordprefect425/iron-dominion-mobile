@@ -1,4 +1,4 @@
-# Iron Dominion Mobile — Design Repository
+`# Iron Dominion Mobile — Design Repository
 
 > **Purpose:** This repo is a design-first thought space for reimagining Iron Dominion as a mobile game with a level-based progression system. It is completely separate from the production web build at [`iron-dominion`](https://github.com/fordprefect425/iron-dominion).
 
@@ -30,9 +30,9 @@ iron-dominion-mobile/
 
 ## Core Vision
 
-> Build a railway empire — one level at a time.
+> Build a railway empire — one level at a time. Earn Research Points. Upgrade your empire. Conquer harder challenges.
 
-The mobile version shifts from open-ended sandbox to **structured challenge**:
+The mobile version shifts from open-ended sandbox to **structured challenge + persistent meta-progression**:
 
 | Desktop (Iron Dominion) | Mobile |
 |---|---|
@@ -41,6 +41,7 @@ The mobile version shifts from open-ended sandbox to **structured challenge**:
 | No end state | Clear win/fail conditions |
 | Keyboard + mouse | Touch-first |
 | Session: hours | Session: 5–15 minutes |
+| No meta-game | RP upgrade system between levels |
 
 ## Status
 

@@ -86,24 +86,39 @@ Route Revenue (per completion) =
 
 ---
 
-## 5. Tech Tree Research Points
+## 5. Level Completion Rewards (Meta Currency)
 
-| Source | RP per Month |
-|---|---|
-| Per station owned | +10 RP |
-| 2% of monthly income | variable |
-| Level bonus (first time) | +50 RP flat |
+> **Research Points (RP) are not generated during a level.** They are awarded only upon level completion and spent in the Meta-Hub between levels. During a level the player thinks only in `$`.
 
-### Tech Costs (unchanged from desktop)
+### RP Awarded per Level
 
-| Era | Cheapest Tech | Most Expensive |
+| Star Rating | RP Awarded | Notes |
 |---|---|---|
-| Steam | 400 RP | 800 RP |
-| Diesel | 1,200 RP | 2,000 RP |
-| Electric | 2,500 RP | 4,000 RP |
-| Maglev | 6,000 RP | 10,000 RP |
+| ⭐ (Primary objective only) | 20 RP | Baseline reward |
+| ⭐⭐ (+ funds surplus) | 35 RP | +15 bonus |
+| ⭐⭐⭐ (All objectives + time) | 50 RP | Maximum per level |
 
-> **Mobile Consideration:** Research is gated by chapter — Diesel unlocks only from Chapter 2 regardless of RP.
+### RP Scaling by Chapter
+
+Later chapters award more RP to reflect higher difficulty:
+
+| Chapter | RP Multiplier | 3★ Max per Level |
+|---|---|---|
+| 1 (Valley) | 1× | 50 RP |
+| 2 (Industrial) | 1.5× | 75 RP |
+| 3 (Electric) | 2× | 100 RP |
+| 4 (Global) | 2.5× | 125 RP |
+| 5 (Future) | 3× | 150 RP |
+
+### Total RP Available (Campaign)
+
+| Scenario | Estimated Total RP |
+|---|---|
+| All Chapter 1 levels at 1★ | ~200 RP |
+| All Chapter 1 levels at 3★ | ~500 RP |
+| Full campaign 3★ all 60 levels | ~5,500 RP |
+
+> **Balance target:** A player should be able to purchase 2–3 early upgrades after completing Chapter 1. See `PROGRESSION.md` for upgrade costs.
 
 ---
 
