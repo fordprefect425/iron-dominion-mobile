@@ -65,13 +65,17 @@
                 <div class="date-display" id="date-display">
                     <span class="date-text">Jan 1840</span>
                 </div>
-                <div class="speed-controls">
-                    <button class="speed-btn" data-speed="0" title="Pause">⏸</button>
-                    <button class="speed-btn active" data-speed="1" title="Normal">▶</button>
+                <div class="speed-controls" id="speed-controls">
+                    <button class="speed-btn active" data-speed="0" title="Pause">⏸</button>
+                    <button class="speed-btn" data-speed="1" title="Normal">▶</button>
                     <button class="speed-btn" data-speed="2" title="Fast">▶▶</button>
                     <button class="speed-btn" data-speed="3" title="Ultra">▶▶▶</button>
                 </div>
-                <button class="action-btn" id="btn-mute" style="min-width: 40px; padding: 4px; margin-left: 8px;"
+                <button class="action-btn" id="btn-info" style="min-width: 40px; padding: 4px; margin-left: 8px;"
+                    title="Level Info">
+                    <span class="action-icon" style="font-size: 16px;">ℹ️</span>
+                </button>
+                <button class="action-btn" id="btn-mute" style="min-width: 40px; padding: 4px; margin-left: 4px;"
                     title="Mute Audio">
                     <span class="action-icon" id="mute-icon" style="font-size: 16px;">🔊</span>
                 </button>
@@ -121,7 +125,6 @@
 
         <!-- Info Panel (Right sidebar) -->
         <div id="info-panel" class="collapsed">
-            <button id="info-panel-toggle" class="panel-toggle">◀</button>
             <div class="panel-content">
                 <div class="panel-header">
                     <h2 id="panel-title">Welcome</h2>

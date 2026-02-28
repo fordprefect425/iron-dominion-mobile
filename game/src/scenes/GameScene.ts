@@ -852,7 +852,7 @@ export class GameScene extends Phaser.Scene {
             });
         });
 
-        document.getElementById('info-panel-toggle')?.addEventListener('click', () => {
+        document.getElementById('btn-info')?.addEventListener('click', () => {
             document.getElementById('info-panel')?.classList.toggle('collapsed');
         });
 

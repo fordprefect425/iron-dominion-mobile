@@ -457,32 +457,6 @@ body {
     transform: translateX(320px);
 }
 
-.panel-toggle {
-    position: absolute;
-    width: 28px;
-    height: 48px;
-    background: var(--panel-bg);
-    border: 1px solid var(--panel-border);
-    border-right: none;
-    border-radius: var(--radius-md) 0 0 var(--radius-md);
-    color: var(--gold);
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    left: -28px;
-}
-
-.panel-toggle:hover {
-    background: rgba(212, 168, 67, 0.15);
-}
-
-#info-panel.collapsed .panel-toggle {
-    transform: translateY(-50%) scaleX(-1);
-}
-
 .panel-content {
     padding: var(--space-lg);
     padding-left: 40px;
@@ -1407,47 +1381,6 @@ kbd {
 
     #info-panel:not(.collapsed) {
         transform: translateY(0);
-    }
-
-    .panel-toggle {
-        left: unset;
-        right: 16px;
-        top: -46px;
-        /* Stick out above panel */
-        border-radius: var(--radius-md) var(--radius-md) 0 0;
-        border: 1px solid var(--panel-border);
-        border-bottom: none;
-        width: 80px;
-        height: 46px;
-        transform: none;
-        color: transparent;
-        /* Hide the desktop arrow */
-        background: var(--panel-bg-solid);
-        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
-        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .panel-toggle::after {
-        content: "▼ Back";
-        color: var(--gold);
-        font-size: 15px;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        white-space: nowrap;
-        font-family: var(--font-body);
-        font-weight: 700;
-    }
-
-    #info-panel.collapsed .panel-toggle {
-        background: var(--panel-bg-solid);
-        transform: translateY(-46px);
-        /* push the toggle up by its height so it stays visible */
-    }
-
-    #info-panel.collapsed .panel-toggle::after {
-        content: "ℹ️ Info";
     }
 
     .panel-content {
