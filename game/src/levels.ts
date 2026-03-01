@@ -75,7 +75,7 @@ export const LEVELS: LevelDefinition[] = [
         mapWidth: 20,
         mapHeight: 15,
         minCityDistance: 3,
-        targetCities: 5,
+        targetCities: 15,
         startingFunds: 70000,
         objective: {
             type: 'connect_cities',
@@ -99,7 +99,7 @@ export const LEVELS: LevelDefinition[] = [
         mapWidth: 24,
         mapHeight: 18,
         minCityDistance: 3,
-        targetCities: 6,
+        targetCities: 15,
         startingFunds: 60000,
         objective: {
             type: 'monthly_income',
@@ -123,7 +123,7 @@ export const LEVELS: LevelDefinition[] = [
         mapWidth: 28,
         mapHeight: 21,
         minCityDistance: 4,
-        targetCities: 8,
+        targetCities: 18,
         startingFunds: 50000,
         objective: {
             type: 'build_stations',
@@ -147,7 +147,7 @@ export const LEVELS: LevelDefinition[] = [
         mapWidth: 40,
         mapHeight: 30,
         minCityDistance: 7,
-        targetCities: 8,
+        targetCities: 18,
         startingFunds: 30000,
         objective: {
             type: 'connect_cities',
