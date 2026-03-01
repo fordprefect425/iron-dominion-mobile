@@ -1,0 +1,14 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Minimalist vector train station building -->
+  <!-- Platform -->
+  <rect x="4" y="48" width="56" height="8" rx="2" fill="#A8A29E" stroke="#57534E" stroke-width="3"/>
+  <!-- Main Building -->
+  <rect x="16" y="24" width="32" height="24" fill="#E7E5E4" stroke="#78716C" stroke-width="3"/>
+  <!-- Pitched Roof -->
+  <polygon points="10,24 32,8 54,24" fill="#EF4444" stroke="#7F1D1D" stroke-width="3" stroke-linejoin="round"/>
+  <!-- Central Clock -->
+  <circle cx="32" cy="18" r="4" fill="#FDE68A" stroke="#78716C" stroke-width="2"/>
+  <!-- Door -->
+  <rect x="26" y="32" width="12" height="16" fill="#57534E" rx="1"/>
+  <rect x="28" y="34" width="8" height="6" fill="#93C5FD"/>
+</svg>

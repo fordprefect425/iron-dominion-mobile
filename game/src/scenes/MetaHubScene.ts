@@ -28,6 +28,7 @@ export class MetaHubScene extends Phaser.Scene {
         // Play hub music if not already playing
         if (!this.sound.get('bgm_menu') || !this.sound.get('bgm_menu')?.isPlaying) {
             this.sound.stopAll();
+            this.sound.mute = true; // Mute by default per user request
             this.sound.add('bgm_menu', { loop: true, volume: 0.5 }).play();
         }
 
@@ -59,8 +60,8 @@ export class MetaHubScene extends Phaser.Scene {
 
             <!-- Chapter heading -->
             <div class="hub-chapter-header">
-                <h2>🗺️ Chapter 1: Valley Rails</h2>
-                <p class="hub-chapter-sub">Complete levels to earn Research Points. Spend them in the Upgrade Hub.</p>
+                <h2 style="color: var(--gold-light); font-size: 32px; letter-spacing: 3px; text-shadow: 0 4px 20px rgba(212,168,67,0.4);">META HUB</h2>
+                <p class="hub-chapter-sub">Chapter 1: Valley Rails</p>
             </div>
 
             <!-- Level Grid -->
@@ -70,16 +71,17 @@ export class MetaHubScene extends Phaser.Scene {
             // Generate star images instead of unicode stars
             const starsHtml = Array.from({ length: 3 }).map((_, idx) =>
                 idx < starsInt
-                    ? '<img src="assets/ui/icon_star.png" style="width:16px; height:16px; object-fit:contain; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5))" alt="*">'
-                    : '<img src="assets/ui/icon_star.png" style="width:16px; height:16px; object-fit:contain; opacity:0.3; filter:grayscale(1)" alt="-">'
+                    ? '<img src="assets/ui/icon_star.png" style="width:24px; height:24px; object-fit:contain; filter:drop-shadow(0 2px 6px rgba(0,0,0,0.9))" alt="*">'
+                    : '<img src="assets/ui/icon_star.png" style="width:24px; height:24px; object-fit:contain; opacity:0.3; filter:grayscale(1) drop-shadow(0 2px 6px rgba(0,0,0,0.9))" alt="-">'
             ).join(' ');
             const prevId = i > 0 ? ch1Levels[i - 1].id : null;
             const isLocked = prevId !== null && (meta.levelStars[prevId] ?? 0) === 0;
             return `
                     <button class="hub-level-btn ${isLocked ? 'locked' : ''}" data-level="${lvl.id}" ${isLocked ? 'disabled' : ''} title="${lvl.description}">
-                        <span class="level-num">${i + 1}</span>
+                        <span class="level-num">LEVEL ${i + 1}</span>
                         <span class="level-name">${lvl.name}</span>
-                        <span class="level-stars" style="display:flex; gap:2px;">${starsHtml}</span>
+                        <span class="level-stars" style="display:flex; gap:4px; justify-content:center; margin-top: 8px;">${starsHtml}</span>
+                        ${isLocked ? '<div style="position: absolute; bottom: -12px; font-size: 32px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.9));">🔒</div>' : ''}
                     </button>`;
         }).join('')}
             </div>

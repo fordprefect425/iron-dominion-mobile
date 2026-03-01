@@ -32,9 +32,12 @@ export class UpgradeHubScene extends Phaser.Scene {
         container.innerHTML = `
         <div class="upgrade-screen">
             <div class="upgrade-header">
-                <h2>🔬 Upgrade Hub</h2>
-                <div class="upgrade-rp-badge">🔬 ${Math.floor(meta.researchPoints)} RP</div>
-                <button class="upgrade-back-btn" id="upgrade-back">← Back</button>
+                <h2 style="font-size: 32px; letter-spacing: 2px; text-transform: uppercase;">UPGRADE HUB</h2>
+                <div class="upgrade-rp-badge" style="font-size: 18px; padding: 8px 16px;">
+                    <img src="assets/ui/icon_rp.png" style="width:20px; height:20px; vertical-align:middle; margin-right:4px;">
+                    ${Math.floor(meta.researchPoints)} <span style="color:var(--text-secondary); font-size:14px;">RP</span>
+                </div>
+                <button class="upgrade-back-btn" id="upgrade-back" style="font-family: var(--font-display); font-size: 16px; font-weight: 700; padding: 10px 20px;">[ CLOSE ]</button>
             </div>
 
             <div class="upgrade-branches">
@@ -71,7 +74,7 @@ export class UpgradeHubScene extends Phaser.Scene {
             </div>
 
             <div class="upgrade-footer">
-                <span class="upgrade-hint">💡 Upgrades apply to all future levels permanently.</span>
+                <span class="upgrade-hint" style="color: var(--gold-light); font-weight: bold; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">💡 Upgrades apply to all future levels permanently.</span>
             </div>
         </div>`;
 

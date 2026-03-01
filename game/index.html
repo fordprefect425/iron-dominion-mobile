@@ -24,101 +24,89 @@
 
     <!-- In-Game UI Overlay (visible during GameScene only) -->
     <div id="ui-overlay">
-        <!-- Top Bar -->
-        <div id="top-bar">
-            <div class="top-bar-left">
-                <div class="company-logo">⚙</div>
-                <div class="company-name">Iron Dominion</div>
-            </div>
-            <div class="top-bar-center">
-                <div class="resource-item" id="funds-display">
-                    <img src="assets/ui/icon_funds.png" class="resource-icon-img" alt="Funds">
-                    <span class="resource-label">Balance</span>
-                    <span class="resource-value" id="funds-value">$50,000</span>
-                </div>
-                <div class="resource-item" id="income-display">
-                    <img src="assets/ui/icon_income.png" class="resource-icon-img" alt="Income">
-                    <span class="resource-label">Income</span>
-                    <span class="resource-value income-positive" id="income-value">+$0</span>
-                </div>
-                <div class="resource-item" id="expenses-display">
-                    <img src="assets/ui/icon_costs.png" class="resource-icon-img" alt="Costs">
-                    <span class="resource-label">Costs</span>
-                    <span class="resource-value income-negative" id="expenses-value">-$0</span>
-                </div>
-                <div class="resource-item" id="net-display">
-                    <img src="assets/ui/icon_net.png" class="resource-icon-img" alt="Net">
-                    <span class="resource-label">Net/mo</span>
-                    <span class="resource-value" id="net-value">+$0</span>
-                </div>
-                <div class="resource-item" id="trains-display" style="cursor: pointer" title="Click to manage fleet">
-                    <img src="assets/ui/icon_trains.png" class="resource-icon-img" alt="Trains">
-                    <span class="resource-label">Trains</span>
-                    <span class="resource-value" id="trains-value">0</span>
-                </div>
-                <!-- RP removed from in-game HUD; shown in Meta-Hub only -->
-            </div>
-            <div class="top-bar-right">
-                <div class="era-badge" id="era-badge">
-                    <span class="era-label">Steam Era</span>
-                </div>
-                <div class="date-display" id="date-display">
-                    <span class="date-text">Jan 1840</span>
-                </div>
-                <div class="speed-controls" id="speed-controls">
-                    <button class="speed-btn active" data-speed="0" title="Pause">⏸</button>
-                    <button class="speed-btn" data-speed="1" title="Normal">▶</button>
-                    <button class="speed-btn" data-speed="2" title="Fast">▶▶</button>
-                    <button class="speed-btn" data-speed="3" title="Ultra">▶▶▶</button>
-                </div>
-                <button class="action-btn" id="btn-info" style="min-width: 40px; padding: 4px; margin-left: 8px;"
-                    title="Level Info">
-                    <span class="action-icon" style="font-size: 16px;">ℹ️</span>
-                </button>
-                <button class="action-btn" id="btn-mute" style="min-width: 40px; padding: 4px; margin-left: 4px;"
-                    title="Mute Audio">
-                    <span class="action-icon" id="mute-icon" style="font-size: 16px;">🔊</span>
-                </button>
-                <!-- Objective indicator (level mode) -->
+        <!-- Premium Top HUD -->
+        <div id="top-hud-container">
+            <!-- Left Info (Date, Era, Objectives) -->
+            <div class="top-hud-floating-left">
+                <div class="era-badge" id="era-badge">Steam Era</div>
+                <div class="date-display" id="date-display">Jan 1840</div>
                 <div id="objective-badge" class="objective-badge" style="display:none">
                     <span id="objective-text">🎯 Objective</span>
                 </div>
             </div>
+
+            <!-- Center Resource Bar -->
+            <div id="top-bar-center" class="premium-hud-panel">
+                <div class="resource-block" id="funds-display">
+                    <span class="resource-label">FUNDS</span>
+                    <span class="resource-value gold" id="funds-value">$50,000</span>
+                </div>
+                <div class="resource-divider"></div>
+                <div class="resource-block" id="income-display">
+                    <span class="resource-label">INCOME</span>
+                    <span class="resource-value" id="income-value">+$0/mo</span>
+                </div>
+
+                <!-- Hidden elements for existing TS logic compatibility -->
+                <div style="display: none;">
+                    <span id="expenses-value"></span>
+                    <span id="net-value"></span>
+                    <span id="trains-value"></span>
+                </div>
+            </div>
+
+            <!-- Right Controls (Speed, Options) -->
+            <div class="top-hud-floating-right">
+                <div id="speed-controls-panel" class="premium-hud-panel premium-hud-small">
+                    <span class="panel-small-title">SPEED CONTROL</span>
+                    <div class="speed-controls" id="speed-controls">
+                        <button class="speed-btn active" data-speed="0" title="Pause">⏸</button>
+                        <button class="speed-btn" data-speed="1" title="Normal">▶</button>
+                        <button class="speed-btn" data-speed="2" title="Fast">▶▶</button>
+                        <button class="speed-btn" data-speed="3" title="Ultra">▶▶▶</button>
+                    </div>
+                </div>
+                <div class="top-small-actions">
+                    <button class="action-btn-small" id="btn-info" title="Level Info">ℹ️</button>
+                    <button class="action-btn-small" id="btn-mute" title="Mute Audio"><span
+                            id="mute-icon">🔇</span></button>
+                </div>
+            </div>
         </div>
 
-        <!-- Action Bar (Bottom) -->
-        <div id="action-bar">
-            <div class="action-group">
-                <button class="action-btn" id="btn-select" data-tool="select" title="Select (Q)">
-                    <span class="action-icon">🔍</span>
-                    <span class="action-label">Select</span>
+        <!-- Premium Action Dock (Bottom) -->
+        <div id="action-dock-container">
+            <div class="action-dock-title">ACTION BAR</div>
+            <div id="action-bar" class="premium-action-dock">
+                <button class="dock-btn" id="btn-select" data-tool="select" title="Select (Q)">
+                    <span class="dock-icon">🔍</span>
+                    <span class="dock-label">SELECT</span>
                 </button>
-                <button class="action-btn" id="btn-track" data-tool="track" title="Build Track (T)">
-                    <span class="action-icon">🛤️</span>
-                    <span class="action-label">Track</span>
+                <div class="dock-divider"></div>
+                <button class="dock-btn" id="btn-track" data-tool="track" title="Build Track (T)">
+                    <span class="dock-icon">🛤️</span>
+                    <span class="dock-label">TRACK</span>
                 </button>
-                <button class="action-btn" id="btn-station" data-tool="station" title="Build Station (S)">
-                    <span class="action-icon">🏛️</span>
-                    <span class="action-label">Station</span>
+                <button class="dock-btn" id="btn-station" data-tool="station" title="Build Station (S)">
+                    <span class="dock-icon">🏛️</span>
+                    <span class="dock-label">STATION</span>
                 </button>
-                <button class="action-btn" id="btn-train" data-tool="train" title="Buy Train (R)">
-                    <span class="action-icon">🚂</span>
-                    <span class="action-label">Train</span>
+                <button class="dock-btn" id="btn-train" data-tool="train" title="Buy Train (R)">
+                    <span class="dock-icon">🚂</span>
+                    <span class="dock-label">TRAIN</span>
                 </button>
-                <button class="action-btn" id="btn-demolish" data-tool="demolish" title="Demolish (D)">
-                    <span class="action-icon">🔨</span>
-                    <span class="action-label">Demolish</span>
+                <button class="dock-btn danger" id="btn-demolish" data-tool="demolish" title="Demolish (D)">
+                    <span class="dock-icon">🔨</span>
+                    <span class="dock-label">DEMOLISH</span>
                 </button>
-            </div>
-            <div class="action-divider"></div>
-            <div class="action-group">
-                <button class="action-btn" id="btn-research" data-tool="research" title="Research (E)">
-                    <span class="action-icon">🔬</span>
-                    <span class="action-label">Research</span>
+                <div class="dock-divider"></div>
+                <button class="dock-btn secondary" id="btn-research" data-tool="research" title="Research (E)">
+                    <span class="dock-icon">🔬</span>
+                    <span class="dock-label">RESEARCH</span>
                 </button>
-                <button class="action-btn hub-return-btn" id="btn-hub" title="World Map">
-                    <span class="action-icon">🗺️</span>
-                    <span class="action-label">Hub</span>
+                <button class="dock-btn secondary hub-return-btn" id="btn-hub" title="World Map">
+                    <span class="dock-icon">🗺️</span>
+                    <span class="dock-label">HUB</span>
                 </button>
             </div>
         </div>

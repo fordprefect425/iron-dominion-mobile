@@ -1,0 +1,15 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Three stacked logs -->
+  <!-- Back/Bottom-Right Log -->
+  <rect x="24" y="24" width="32" height="16" rx="4" fill="#8B5A2B" stroke="#5C3A21" stroke-width="2"/>
+  <ellipse cx="24" cy="32" rx="6" ry="8" fill="#D2B48C" stroke="#5C3A21" stroke-width="2"/>
+  
+  <!-- Bottom-Left Log -->
+  <rect x="16" y="38" width="32" height="16" rx="4" fill="#8B5A2B" stroke="#5C3A21" stroke-width="2"/>
+  <ellipse cx="16" cy="46" rx="6" ry="8" fill="#D2B48C" stroke="#5C3A21" stroke-width="2"/>
+
+  <!-- Top Log -->
+  <rect x="20" y="10" width="32" height="16" rx="4" fill="#8B5A2B" stroke="#5C3A21" stroke-width="2"/>
+  <ellipse cx="20" cy="18" rx="6" ry="8" fill="#D2B48C" stroke="#5C3A21" stroke-width="2"/>
+  <ellipse cx="20" cy="18" rx="2" ry="4" fill="none" stroke="#5C3A21" stroke-width="2"/>
+</svg>

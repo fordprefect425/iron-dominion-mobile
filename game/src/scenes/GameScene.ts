@@ -26,9 +26,8 @@ export class GameScene extends Phaser.Scene {
     private trainGraphics!: Phaser.GameObjects.Graphics;
     private overlayGraphics!: Phaser.GameObjects.Graphics;
     private stationSprites: Phaser.GameObjects.Image[] = [];
-    private trainSprites: Map<number, Phaser.GameObjects.Image> = new Map();
     private cityTexts: Phaser.GameObjects.Text[] = [];
-    private resourceIcons: Phaser.GameObjects.Text[] = [];
+    private resourceIcons: Phaser.GameObjects.Image[] = [];
     private isDragging = false;
     private dragDidMove = false;
     private dragStart = { x: 0, y: 0 };
@@ -84,9 +83,15 @@ export class GameScene extends Phaser.Scene {
     }
 
     preload(): void {
-        this.load.image('entity_station', 'assets/entities/entity_station.png');
+        this.load.svg('entity_station', 'assets/entities/station.svg');
         this.load.image('entity_engine', 'assets/entities/entity_engine.png');
         this.load.image('entity_carriage', 'assets/entities/entity_carriage.png');
+
+        // Resources
+        this.load.svg('icon_coal', 'assets/resources/coal.svg');
+        this.load.svg('icon_iron', 'assets/resources/iron.svg');
+        this.load.svg('icon_timber', 'assets/resources/timber.svg');
+        this.load.svg('icon_grain', 'assets/resources/grain.svg');
 
         // Load Audio
         this.load.audio('bgm_steam', 'audio/Westbound Rail Dust.mp3');
@@ -110,8 +115,11 @@ export class GameScene extends Phaser.Scene {
 
         this.mapGraphics = this.add.graphics();
         this.trackGraphics = this.add.graphics();
+        this.trackGraphics.setDepth(1);
         this.trainGraphics = this.add.graphics();
+        this.trainGraphics.setDepth(2);
         this.overlayGraphics = this.add.graphics();
+        this.overlayGraphics.setDepth(10);
 
         this.drawMap();
         this.drawCities();
@@ -126,6 +134,9 @@ export class GameScene extends Phaser.Scene {
         const worldH = this.mapHeight * HEX_SIZE * 2;
         this.cameras.main.setBounds(-100, -100, worldW + 200, worldH + 200);
         this.cameras.main.setZoom(1.5);
+
+        // Add a global vignette overlay for premium depth
+        this.createVignette();
 
         // Enable multi-touch for pinch zoom
         this.input.addPointer(1);
@@ -198,6 +209,45 @@ export class GameScene extends Phaser.Scene {
         this.currentBgm = nextBgm;
     }
 
+    private createVignette(): void {
+        const vignette = this.add.graphics();
+        vignette.setDepth(20); // Above everything except UI
+        vignette.setScrollFactor(0); // Lock to camera
+
+        // Create a radial gradient from transparent center to dark edges
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+        const cx = width / 2;
+        const cy = height / 2;
+        const radius = Math.max(width, height) * 0.8;
+
+        vignette.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0, 0, 0.6, 0.6);
+        // We use a large rectangle locked to screen
+        vignette.fillRect(0, 0, width, height);
+
+        // Phaser graphics don't easily do true radial alpha gradients,
+        // so we fake it with a large image or multiple large circles with low alpha
+        vignette.clear();
+        for (let i = 0; i < 5; i++) {
+            vignette.lineStyle(100 + i * 50, 0x0f0b08, 0.15);
+            vignette.strokeCircle(cx, cy, radius + i * 50);
+        }
+
+        // Listen for resize to update vignette
+        this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
+            vignette.clear();
+            const w = gameSize.width;
+            const h = gameSize.height;
+            const c_x = w / 2;
+            const c_y = h / 2;
+            const r = Math.max(w, h) * 0.8;
+            for (let i = 0; i < 5; i++) {
+                vignette.lineStyle(100 + i * 50, 0x0f0b08, 0.15);
+                vignette.strokeCircle(c_x, c_y, r + i * 50);
+            }
+        });
+    }
+
     update(_time: number, delta: number): void {
         this.updateKeyboardPan(delta);
         this.drawOverlay();
@@ -246,30 +296,74 @@ export class GameScene extends Phaser.Scene {
                 const center = hexToPixel(hex);
                 const corners = hexCorners(center);
                 const isExplored = this.gameState.map.explored.has(key);
-                const terrainInfo = TERRAIN_DATA[terrain];
-                let color = terrainInfo.color;
 
-                if (!isExplored) {
-                    color = 0x1a1a22;
-                }
+                if (isExplored) {
+                    // Solid, harmonious vector flat colors
+                    let color = 0x5a8f5c; // Default grass green
+                    switch (terrain) {
+                        case 'water':
+                        case 'coast':
+                            color = 0x4a7a9c; // Deep blue
+                            break;
+                        case 'river':
+                            color = 0x5c8fb3; // Light river blue
+                            break;
+                        case 'plains':
+                            color = 0x8ab870; // Vibrant plain green
+                            break;
+                        case 'forest':
+                        case 'swamp':
+                            color = 0x426e45; // Dark forest green
+                            break;
+                        case 'mountains':
+                        case 'hills':
+                            color = 0x8a8c91; // Slate gray
+                            break;
+                        case 'desert':
+                            color = 0xd6c278; // Warm sand
+                            break;
+                    }
 
-                this.mapGraphics.fillStyle(color, isExplored ? 1 : 0.7);
-                this.mapGraphics.beginPath();
-                this.mapGraphics.moveTo(corners[0].x, corners[0].y);
-                for (let i = 1; i < 6; i++) {
-                    this.mapGraphics.lineTo(corners[i].x, corners[i].y);
-                }
-                this.mapGraphics.closePath();
-                this.mapGraphics.fillPath();
+                    // Draw the flat colored hexagon
+                    this.mapGraphics.fillStyle(color, 1);
+                    this.mapGraphics.beginPath();
+                    this.mapGraphics.moveTo(corners[0].x, corners[0].y);
+                    for (let i = 1; i < 6; i++) {
+                        this.mapGraphics.lineTo(corners[i].x, corners[i].y);
+                    }
+                    this.mapGraphics.closePath();
+                    this.mapGraphics.fillPath();
 
-                this.mapGraphics.lineStyle(1, isExplored ? 0x3D3D48 : 0x111118, 0.4);
-                this.mapGraphics.beginPath();
-                this.mapGraphics.moveTo(corners[0].x, corners[0].y);
-                for (let i = 1; i < 6; i++) {
-                    this.mapGraphics.lineTo(corners[i].x, corners[i].y);
+                    // Draw a clean, consistent outline for the board game / vector feel
+                    this.mapGraphics.lineStyle(2, 0x1f2429, 0.4);
+                    this.mapGraphics.beginPath();
+                    this.mapGraphics.moveTo(corners[0].x, corners[0].y);
+                    for (let i = 1; i < 6; i++) {
+                        this.mapGraphics.lineTo(corners[i].x, corners[i].y);
+                    }
+                    this.mapGraphics.closePath();
+                    this.mapGraphics.strokePath();
+
+                } else {
+                    // Fog of war over the new rich background
+                    this.mapGraphics.fillStyle(0x11131a, 0.6);
+                    this.mapGraphics.beginPath();
+                    this.mapGraphics.moveTo(corners[0].x, corners[0].y);
+                    for (let i = 1; i < 6; i++) {
+                        this.mapGraphics.lineTo(corners[i].x, corners[i].y);
+                    }
+                    this.mapGraphics.closePath();
+                    this.mapGraphics.fillPath();
+
+                    this.mapGraphics.lineStyle(2, 0x11131a, 0.4);
+                    this.mapGraphics.beginPath();
+                    this.mapGraphics.moveTo(corners[0].x, corners[0].y);
+                    for (let i = 1; i < 6; i++) {
+                        this.mapGraphics.lineTo(corners[i].x, corners[i].y);
+                    }
+                    this.mapGraphics.closePath();
+                    this.mapGraphics.strokePath();
                 }
-                this.mapGraphics.closePath();
-                this.mapGraphics.strokePath();
             }
         }
     }
@@ -284,6 +378,10 @@ export class GameScene extends Phaser.Scene {
 
             const center = hexToPixel(city.hex);
 
+            // Drop shadow for depth (increased opacity and blur spread)
+            this.mapGraphics.fillStyle(0x000000, 0.6);
+            this.mapGraphics.fillCircle(center.x, center.y + 4, 8);
+
             this.mapGraphics.fillStyle(0xF5E6C8, 1);
             this.mapGraphics.fillCircle(center.x, center.y, 6);
             this.mapGraphics.lineStyle(2, 0xD4A843, 1);
@@ -294,22 +392,23 @@ export class GameScene extends Phaser.Scene {
                 this.mapGraphics.strokeCircle(center.x, center.y, 10);
             }
 
-            const nameText = this.add.text(center.x, center.y + 14, city.name, {
+            const nameText = this.add.text(center.x, center.y + 16, city.name, {
                 fontFamily: 'Playfair Display, serif',
-                fontSize: '10px',
-                color: '#F5E6C8',
-                stroke: '#1a1a22',
-                strokeThickness: 3,
+                fontSize: '14px',
+                color: '#FFFFFF',
+                stroke: '#000000',
+                strokeThickness: 5,
                 align: 'center',
-            }).setOrigin(0.5, 0);
+                shadow: { offsetX: 2, offsetY: 2, color: '#000000', blur: 4, stroke: true, fill: true }
+            }).setOrigin(0.5, 0).setDepth(15);
             this.cityTexts.push(nameText);
 
             const popText = this.add.text(center.x, center.y + 24, `pop: ${city.population}`, {
                 fontFamily: 'JetBrains Mono, monospace',
-                fontSize: '7px',
-                color: '#9A9DA5',
+                fontSize: '8px',
+                color: '#B0B3BC',
                 stroke: '#1a1a22',
-                strokeThickness: 2,
+                strokeThickness: 3,
                 align: 'center',
             }).setOrigin(0.5, 0);
             this.cityTexts.push(popText);
@@ -320,17 +419,15 @@ export class GameScene extends Phaser.Scene {
         this.resourceIcons.forEach(t => t.destroy());
         this.resourceIcons = [];
 
-        const icons: Record<string, string> = {
-            coal: '⛏️', iron: '🔩', timber: '🪵', grain: '🌾'
-        };
-
         this.gameState.map.resources.forEach((resource: string, key: string) => {
             if (!this.gameState.map.explored.has(key)) return;
             const [q, r] = key.split(',').map(Number);
             const center = hexToPixel({ q, r });
-            const icon = this.add.text(center.x, center.y - 8, icons[resource] || '?', {
-                fontSize: '12px',
-            }).setOrigin(0.5, 0.5);
+
+            const iconKey = 'icon_' + resource;
+            const icon = this.add.image(center.x, center.y - 10, iconKey);
+            icon.setDisplaySize(24, 24); // SLIGHTLY LARGER FOR SVG READABILITY
+            icon.setDepth(2);
             this.resourceIcons.push(icon);
         });
     }
@@ -347,10 +444,18 @@ export class GameScene extends Phaser.Scene {
             const len = Math.sqrt(dx * dx + dy * dy);
             const nx = -dy / len;
             const ny = dx / len;
-            const tieLen = 4;
+            const tieLen = 5; // Slightly wider ties
             const tieCount = 5;
 
-            this.trackGraphics.lineStyle(1, 0x5C4A2A, 0.6);
+            // Track drop shadow (stronger, offset further)
+            this.trackGraphics.lineStyle(6, 0x000000, 0.5);
+            this.trackGraphics.beginPath();
+            this.trackGraphics.moveTo(fromPx.x, fromPx.y + 4);
+            this.trackGraphics.lineTo(toPx.x, toPx.y + 4);
+            this.trackGraphics.strokePath();
+
+            // Darker, thicker ties
+            this.trackGraphics.lineStyle(2, 0x2A2015, 0.8);
             for (let i = 1; i <= tieCount; i++) {
                 const t = i / (tieCount + 1);
                 const mx = fromPx.x + dx * t;
@@ -362,7 +467,7 @@ export class GameScene extends Phaser.Scene {
             }
 
             const railOffset = 2;
-            this.trackGraphics.lineStyle(2, 0x8B8B8B, 0.9);
+            this.trackGraphics.lineStyle(2, 0xAAAAAA, 1.0); // Brighter, clearer rails
 
             this.trackGraphics.beginPath();
             this.trackGraphics.moveTo(fromPx.x + nx * railOffset, fromPx.y + ny * railOffset);
@@ -375,7 +480,7 @@ export class GameScene extends Phaser.Scene {
             this.trackGraphics.strokePath();
         });
 
-        // Station markers using HD sprites
+        // Station markers using SVGs
         this.stationSprites.forEach(s => s.destroy());
         this.stationSprites = [];
 
@@ -383,14 +488,22 @@ export class GameScene extends Phaser.Scene {
             const center = hexToPixel(station.hex);
             const size = station.type === 'terminal' ? 24 : station.type === 'station' ? 18 : 12;
 
+            // Station vector SVG image shadow
+            const spriteShadow = this.add.image(center.x, center.y + 4, 'entity_station');
+            spriteShadow.setDisplaySize(size * 1.5, size * 1.5);
+            spriteShadow.setTint(0x000000);
+            spriteShadow.setAlpha(0.6);
+            spriteShadow.setDepth(4);
+            this.stationSprites.push(spriteShadow);
+
             const sprite = this.add.image(center.x, center.y - 4, 'entity_station');
-            sprite.setDisplaySize(size * 1.5, size * 1.5); // Aspect ratio is roughly square-ish
+            sprite.setDisplaySize(size * 1.5, size * 1.5);
             sprite.setDepth(5);
             this.stationSprites.push(sprite);
 
-            // Draw a subtle selection ring underneath
-            this.trackGraphics.lineStyle(1.5, 0xD4A843, 0.3);
-            this.trackGraphics.strokeCircle(center.x, center.y, size);
+            // Draw a prominent selection ring underneath
+            this.trackGraphics.lineStyle(2, 0xD4A843, 0.6);
+            this.trackGraphics.strokeCircle(center.x, center.y, size + 1);
         });
     }
 
@@ -411,17 +524,32 @@ export class GameScene extends Phaser.Scene {
             const y = fromPx.y + (toPx.y - fromPx.y) * train.progress;
             const angle = Math.atan2(toPx.y - fromPx.y, toPx.x - fromPx.x);
 
-            let sprite = this.trainSprites.get(train.id);
-            if (!sprite) {
-                sprite = this.add.image(x, y, 'entity_engine');
-                sprite.setDepth(10);
-                // Make the train a reasonable size
-                sprite.setDisplaySize(28, 14);
-                this.trainSprites.set(train.id, sprite);
-            }
+            // Draw flat vector train instead of sprite
+            this.trainGraphics.save();
+            this.trainGraphics.translateCanvas(x, y);
+            this.trainGraphics.rotateCanvas(angle);
 
-            sprite.setPosition(x, y);
-            sprite.setRotation(angle);
+            // Train shadow
+            this.trainGraphics.fillStyle(0x000000, 0.3);
+            this.trainGraphics.fillRect(-12, -6 + 2, 24, 12);
+
+            // Train body
+            const isSteam = this.gameState.era === 'steam';
+            const bodyColor = isSteam ? 0x222222 : 0x552222;
+            const trimColor = 0xD4A843;
+
+            this.trainGraphics.fillStyle(bodyColor, 1);
+            this.trainGraphics.fillRect(-12, -6, 24, 12);
+
+            // Cabin
+            this.trainGraphics.fillStyle(0x444444, 1);
+            this.trainGraphics.fillRect(-10, -5, 8, 10);
+
+            // Engine block / Boiler
+            this.trainGraphics.fillStyle(trimColor, 1);
+            this.trainGraphics.fillRect(4, -4, 8, 8);
+
+            this.trainGraphics.restore();
 
             if (this.gameState.era === 'steam') {
                 const smokeAlpha = 0.3 + Math.sin(Date.now() / 200 + train.id) * 0.15;
@@ -432,14 +560,6 @@ export class GameScene extends Phaser.Scene {
                 const sy = y + Math.sin(angle) * stackOffset;
                 this.trainGraphics.fillCircle(sx, sy - 4, 3);
                 this.trainGraphics.fillCircle(sx - 2, sy - 8, 2);
-            }
-        }
-
-        // Cleanup destroyed trains
-        for (const [id, sprite] of this.trainSprites.entries()) {
-            if (!activeTrainIds.has(id)) {
-                sprite.destroy();
-                this.trainSprites.delete(id);
             }
         }
     }
@@ -844,7 +964,7 @@ export class GameScene extends Phaser.Scene {
     // ============ UI ============
 
     private setupUI(): void {
-        document.querySelectorAll('.action-btn').forEach(btn => {
+        document.querySelectorAll('.dock-btn').forEach(btn => {
             (btn as HTMLElement).onclick = () => {
                 const tool = btn.getAttribute('data-tool') as Tool;
                 if (tool) this.setTool(tool);

@@ -33,7 +33,7 @@ const config: Phaser.Types.Core.GameConfig = {
   parent: 'game-container',
   width: window.innerWidth,
   height: window.innerHeight,
-  backgroundColor: '#1a1a22',
+  backgroundColor: '#1e2029', // Rich, deep atmospheric color for map background
   antialias: true,
   // Scenes: MetaHubScene first (boot screen), then GameScene + hub scenes
   scene: [MetaHubScene, GameScene, UpgradeHubScene, LevelCompleteScene, LevelFailedScene],
