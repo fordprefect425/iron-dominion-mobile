@@ -135,23 +135,23 @@ export const LEVELS: LevelDefinition[] = [
         chapter: 1,
         name: 'The Expanding Frontier',
         description: 'A vast, sparse landscape. Connect 4 cities without going bankrupt. Resources are highly spread out.',
-        timeLimitMonths: 180,
+        timeLimitMonths: 240,
         bankruptcyThreshold: -5000,
         mapWidth: 20,
         mapHeight: 15,
-        minCityDistance: 7,
+        minCityDistance: 5,
         targetCities: 18,
-        startingFunds: 30000,
+        startingFunds: 45000,
         objective: {
             type: 'connect_cities',
             target: 4,
             label: 'Connect 4 cities',
         },
         stars: {
-            // 3★: 60 months (~33% of 180)
-            three: { maxMonths: 60 },
-            // 2★: 120 months (~66% of 180)
-            two: { maxMonths: 120 },
+            // 3★: 80 months (~33% of 240)
+            three: { maxMonths: 80 },
+            // 2★: 160 months (~66% of 240)
+            two: { maxMonths: 160 },
         },
     },
     {
