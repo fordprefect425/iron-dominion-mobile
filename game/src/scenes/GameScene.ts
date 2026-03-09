@@ -1341,8 +1341,18 @@ export class GameScene extends Phaser.Scene {
                     <div class="notification-title">${notif.title}</div>
                     <div class="notification-text">${notif.text}</div>
                 </div>
+                <button class="notification-dismiss" aria-label="Dismiss">✕</button>
             `;
             container.appendChild(el);
+
+            el.querySelector('.notification-dismiss')!.addEventListener('click', () => {
+                el.classList.add('leaving');
+                setTimeout(() => {
+                    const idx = this.gameState.notifications.indexOf(notif);
+                    if (idx !== -1) this.gameState.notifications.splice(idx, 1);
+                    el.remove();
+                }, 300);
+            });
 
             if (age > 6000) {
                 el.classList.add('leaving');
