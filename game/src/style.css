@@ -612,6 +612,7 @@ body {
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
     pointer-events: auto;
+    z-index: 20;
 }
 
 #info-panel.collapsed {
@@ -791,6 +792,21 @@ kbd {
 
 .notification.info {
     border-color: var(--steel-blue);
+}
+
+.notification-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0;
+    margin-left: auto;
+    align-self: flex-start;
+}
+
+.notification-close:hover {
+    color: var(--text-primary);
 }
 
 @keyframes notif-in {

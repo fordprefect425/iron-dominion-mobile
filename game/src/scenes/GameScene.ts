@@ -61,6 +61,9 @@ export class GameScene extends Phaser.Scene {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private currentBgm?: any;
     private lastEra?: string;
+    // SFX handles
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private sfx: Record<string, any> = {};
 
     constructor() {
         super({ key: 'GameScene' });
@@ -92,10 +95,21 @@ export class GameScene extends Phaser.Scene {
         this.load.svg('icon_timber', 'assets/resources/timber.svg');
         this.load.svg('icon_grain', 'assets/resources/grain.svg');
 
-        // Load Audio
+        // Load BGM
         this.load.audio('bgm_steam', 'audio/Westbound Rail Dust.mp3');
         this.load.audio('bgm_diesel', 'audio/Steel and Silence.mp3');
         this.load.audio('bgm_electric', 'audio/Skyline Data Run.mp3');
+
+        // Load SFX
+        const sfxFiles = [
+            'track_lay', 'station_built', 'train_horn', 'train_purchase',
+            'demolish', 'achievement_chime', 'era_transition', 'level_failed',
+            'ui_click', 'ui_error', 'notification', 'income_tick',
+            'research_unlock', 'rank_up'
+        ];
+        for (const key of sfxFiles) {
+            this.load.audio(`sfx_${key}`, `audio/${key}.mp3`);
+        }
     }
 
     create(): void {
@@ -161,10 +175,29 @@ export class GameScene extends Phaser.Scene {
         this.bgmElectric = this.sound.add('bgm_electric', { loop: true });
         this.lastEra = this.gameState.era;
 
+        // Initialise SFX handles
+        const sfxKeys = [
+            'track_lay', 'station_built', 'train_horn', 'train_purchase',
+            'demolish', 'achievement_chime', 'era_transition', 'level_failed',
+            'ui_click', 'ui_error', 'notification', 'income_tick',
+            'research_unlock', 'rank_up'
+        ];
+        for (const key of sfxKeys) {
+            this.sfx[key] = this.sound.add(`sfx_${key}`, { volume: 0.7 });
+        }
+
         // Stop any hub music if coming from MetaHub
         this.sound.stopAll();
 
         this.playEraMusic(this.gameState.era);
+    }
+
+    private playSfx(key: string, volumeOverride?: number): void {
+        if (this.sound.mute) return;
+        const s = this.sfx[key];
+        if (!s) return;
+        if (volumeOverride !== undefined) s.setVolume(volumeOverride);
+        s.play();
     }
 
     private playEraMusic(era: string): void {
@@ -260,6 +293,7 @@ export class GameScene extends Phaser.Scene {
         // Era audio check
         if (this.gameState.era !== this.lastEra) {
             this.lastEra = this.gameState.era;
+            this.playSfx('era_transition', 0.65);
             this.playEraMusic(this.gameState.era);
         }
 
@@ -270,6 +304,7 @@ export class GameScene extends Phaser.Scene {
             this.economyTimer = 0;
             advanceTime(this.gameState);
             this.monthsElapsed++;
+            if (this.gameState.lastMonthIncome > 0) this.playSfx('income_tick', 0.35);
             this.renderNotifications();
 
             // Check level objective and loss conditions after each month
@@ -776,6 +811,7 @@ export class GameScene extends Phaser.Scene {
                         }
                     }
                     if (builtAny) {
+                        this.playSfx('track_lay');
                         this.drawTracks();
                         this.drawMap();
                         this.drawCities();
@@ -788,12 +824,15 @@ export class GameScene extends Phaser.Scene {
 
             case 'station':
                 if (buildStation(this.gameState, hex)) {
+                    this.playSfx('station_built');
                     this.drawTracks();
                     this.drawMap();
                     this.drawCities();
                     this.drawResources();
                     this.updateUI();
                     this.renderNotifications();
+                } else {
+                    this.playSfx('ui_error', 0.5);
                 }
                 break;
 
@@ -804,6 +843,7 @@ export class GameScene extends Phaser.Scene {
                         this.showTrainPurchaseUI();
                     }
                 } else {
+                    this.playSfx('ui_error', 0.5);
                     addNotification(this.gameState, '⚠️', 'No Station', 'Click on stations to define a train route.', 'warning');
                     this.renderNotifications();
                 }
@@ -811,6 +851,7 @@ export class GameScene extends Phaser.Scene {
 
             case 'demolish':
                 if (this.gameState.stations.has(key)) {
+                    this.playSfx('demolish');
                     this.gameState.stations.delete(key);
                     this.gameState.funds -= 500;
                     this.drawTracks();
@@ -964,12 +1005,16 @@ export class GameScene extends Phaser.Scene {
                 if (!loco) return;
                 const train = deployLocomotive(this.gameState, loco, [...this.trainRouteStations]);
                 if (train) {
+                    this.playSfx('train_purchase');
+                    // Brief delay then play horn for extra satisfaction
+                    this.time.delayedCall(350, () => this.playSfx('train_horn', 0.5));
                     this.trainRouteStations = [];
                     this.updateUI();
                     this.renderNotifications();
                     this.drawTrains();
                     this.showHexInfo(train.route[0]);
                 } else {
+                    this.playSfx('ui_error', 0.5);
                     this.renderNotifications();
                 }
             });
@@ -986,7 +1031,7 @@ export class GameScene extends Phaser.Scene {
         document.querySelectorAll('.dock-btn').forEach(btn => {
             (btn as HTMLElement).onclick = () => {
                 const tool = btn.getAttribute('data-tool') as Tool;
-                if (tool) this.setTool(tool);
+                if (tool) { this.playSfx('ui_click', 0.5); this.setTool(tool); }
             };
         });
 
@@ -1312,12 +1357,18 @@ export class GameScene extends Phaser.Scene {
         if (dateEl) dateEl.textContent = `${getMonthName(s.month)} ${s.year}`;
     }
 
+    private _lastNotifCount = 0;
     private renderNotifications(): void {
         const container = document.getElementById('notifications-container');
         if (!container) return;
 
         container.innerHTML = '';
         const now = Date.now();
+
+        // Play notification SFX when a new toast appears
+        const activeCount = this.gameState.notifications.filter(n => now - n.time < 8000).length;
+        if (activeCount > this._lastNotifCount) this.playSfx('notification', 0.4);
+        this._lastNotifCount = activeCount;
 
         for (const notif of this.gameState.notifications) {
             const age = now - notif.time;
@@ -1331,8 +1382,19 @@ export class GameScene extends Phaser.Scene {
                     <div class="notification-title">${notif.title}</div>
                     <div class="notification-text">${notif.text}</div>
                 </div>
+                <button class="notification-close" data-id="${notif.id}">✕</button>
             `;
             container.appendChild(el);
+
+            const closeBtn = el.querySelector('.notification-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    this.playSfx('ui_click', 0.5);
+                    const id = parseInt(closeBtn.getAttribute('data-id') || '-1');
+                    this.gameState.notifications = this.gameState.notifications.filter(n => n.id !== id);
+                    this.renderNotifications();
+                });
+            }
 
             if (age > 6000) {
                 el.classList.add('leaving');
@@ -1466,6 +1528,7 @@ export class GameScene extends Phaser.Scene {
         this.levelComplete = true;
         s.speed = 0;
         this.updateSpeedButtons();
+        this.playSfx(stars === 3 ? 'rank_up' : 'achievement_chime');
 
         const overlay = document.getElementById('ui-overlay');
         if (overlay) overlay.style.display = 'none';
@@ -1499,6 +1562,7 @@ export class GameScene extends Phaser.Scene {
         this.levelFailed = true;
         s.speed = 0;
         this.updateSpeedButtons();
+        this.playSfx('level_failed');
 
         const overlay = document.getElementById('ui-overlay');
         if (overlay) overlay.style.display = 'none';
