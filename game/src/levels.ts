@@ -136,7 +136,7 @@ export const LEVELS: LevelDefinition[] = [
         name: 'The Expanding Frontier',
         description: 'A vast, sparse landscape. Connect 4 cities without going bankrupt. Resources are highly spread out.',
         timeLimitMonths: 180,
-        bankruptcyThreshold: 0,
+        bankruptcyThreshold: -5000,
         mapWidth: 20,
         mapHeight: 15,
         minCityDistance: 7,
@@ -160,7 +160,9 @@ export const LEVELS: LevelDefinition[] = [
         name: 'Mail Express',
         description: 'Speed matters. Build a mail route and meet your income target fast.',
         timeLimitMonths: 240,
-        bankruptcyThreshold: -5000,
+        bankruptcyThreshold: -8000,
+        mapWidth: 24,
+        mapHeight: 18,
         objective: {
             type: 'monthly_income',
             target: 1000,
@@ -179,7 +181,9 @@ export const LEVELS: LevelDefinition[] = [
         name: 'The Coach Line',
         description: 'Premium passengers await. Get 2 trains running simultaneously.',
         timeLimitMonths: 300,
-        bankruptcyThreshold: -5000,
+        bankruptcyThreshold: -8000,
+        mapWidth: 28,
+        mapHeight: 21,
         objective: {
             type: 'run_trains',
             target: 2,
@@ -199,6 +203,8 @@ export const LEVELS: LevelDefinition[] = [
         description: 'Bridge the divide. Connect 4 cities across a wide map.',
         timeLimitMonths: 300,
         bankruptcyThreshold: -10000,
+        mapWidth: 32,
+        mapHeight: 24,
         objective: {
             type: 'connect_cities',
             target: 4,
@@ -218,6 +224,8 @@ export const LEVELS: LevelDefinition[] = [
         description: 'Industrial boom. Amass $10,000 in total revenue from your routes.',
         timeLimitMonths: 360,
         bankruptcyThreshold: -8000,
+        mapWidth: 36,
+        mapHeight: 27,
         objective: {
             type: 'total_revenue',
             target: 10000,
@@ -237,6 +245,8 @@ export const LEVELS: LevelDefinition[] = [
         description: 'Competition is fierce. Out-earn the market with $2,000/month.',
         timeLimitMonths: 360,
         bankruptcyThreshold: -10000,
+        mapWidth: 36,
+        mapHeight: 27,
         objective: {
             type: 'monthly_income',
             target: 2000,
@@ -256,6 +266,8 @@ export const LEVELS: LevelDefinition[] = [
         description: 'The grand finale. Connect 5 cities and build a railway empire.',
         timeLimitMonths: 480,
         bankruptcyThreshold: -15000,
+        mapWidth: 40,
+        mapHeight: 30,
         objective: {
             type: 'connect_cities',
             target: 5,
