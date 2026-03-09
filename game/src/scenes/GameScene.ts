@@ -10,13 +10,12 @@ import {
     createGameState, buildTrack, buildStation,
     canBuildTrack, canBuildStation, updateTrains, advanceTime,
     getMonthName, getEraLabel, formatMoney, addNotification,
-    buyTrain, removeTrain, TRAIN_CONFIGS, COSTS,
+    deployLocomotive, removeTrain,
 } from '../gameState';
 import type { Tool, GameState } from '../gameState';
-import { TECH_TREE, canResearch, unlockTech, getUnlockedTrainTypes, getEraForTech } from '../techTree';
-import type { Technology } from '../techTree';
 import { loadMeta } from '../metaState';
-import { computeUpgradeBonuses } from '../upgradeTree';
+import { computeUpgradeBonuses, UPGRADE_TREE } from '../upgradeTree';
+import { getLocoStats, getStarDisplay, getDeployCost, getTemplate } from '../locomotives';
 import { getLevelById } from '../levels';
 
 export class GameScene extends Phaser.Scene {
@@ -887,40 +886,59 @@ export class GameScene extends Phaser.Scene {
         const body = document.getElementById('panel-body')!;
 
         panel.classList.remove('collapsed');
-        title.textContent = 'Purchase Train';
+        title.textContent = 'Purchase Locomotive';
 
         const stationsText = this.trainRouteStations.map(h => {
             const station = this.gameState.stations.get(hexKey(h));
             return station ? station.name : 'Unknown';
         }).join(' → ');
 
-        const costMap: Record<string, number> = {
-            freight: COSTS.trainFreight, passenger: COSTS.trainPassenger, mixed: COSTS.trainMixed,
-            luxury: COSTS.trainLuxury, mail: COSTS.trainMail, express: COSTS.trainExpress,
-            commuter: COSTS.trainCommuter, bullet: COSTS.trainBullet, hyperloop: COSTS.trainHyperloop,
-        };
-
-        const unlockedTypes = getUnlockedTrainTypes(this.gameState.research);
+        const meta = loadMeta();
 
         body.innerHTML = `
             <div class="info-section">
                 <p style="color: var(--text-secondary); margin-bottom: 12px;">Route: ${stationsText}</p>
                 <div class="train-options">
-                    ${(Object.keys(TRAIN_CONFIGS) as Array<Train['type']>)
-                .filter(type => unlockedTypes.includes(type))
-                .map((type) => `
-                        <button class="train-buy-btn" data-type="${type}" style="
+                    ${meta.ownedLocomotives.length === 0
+                ? '<p style="color: var(--text-secondary);">No blueprints unlocked. Unlock some in the Upgrade Hub!</p>'
+                : meta.ownedLocomotives.map(loco => {
+                    const stats = getLocoStats(loco);
+                    const tmpl = getTemplate(loco.templateId);
+                    const cost = getDeployCost(stats.trainType);
+                    const stars = getStarDisplay(loco.level);
+                    const canAfford = this.gameState.funds >= cost;
+                    const disabled = !canAfford;
+
+                    return `
+                        <button class="train-buy-btn ${disabled ? 'disabled' : ''}" data-loco-id="${loco.instanceId}" ${disabled ? 'disabled' : ''} style="
                             display: flex; justify-content: space-between; align-items: center;
                             width: 100%; padding: 8px 12px; margin-bottom: 6px;
-                            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
-                            border-radius: 6px; color: var(--text-primary); cursor: pointer;
+                            background: rgba(255,255,255,0.04);
+                            border: 1px solid rgba(255,255,255,0.08);
+                            border-radius: 6px; color: ${disabled ? 'var(--text-secondary)' : 'var(--text-primary)'};
+                            cursor: ${disabled ? 'not-allowed' : 'pointer'};
                             font-family: var(--font-body); font-size: 13px;
-                            transition: all 0.2s ease;
+                            transition: all 0.2s ease; opacity: ${disabled ? '0.5' : '1'};
                         ">
-                            <span>${type.charAt(0).toUpperCase() + type.slice(1)}</span>
-                            <span style="font-family: var(--font-mono); color: var(--gold);">$${(costMap[type] || 0).toLocaleString()}</span>
-                        </button>
-                    `).join('')}
+                            <span style="display:flex; align-items:center; gap:6px;">
+                                <span>${tmpl?.icon ?? '🚂'}</span>
+                                <span>
+                                    <strong>${loco.name}</strong>
+                                    <span style="color: var(--gold); margin-left: 4px;">${stars}</span>
+                                    <br/>
+                                    <span style="font-size: 11px; color: var(--text-secondary);">
+                                        ${stats.trainType} • spd ${(stats.speed * 100).toFixed(0)}% • cap ${stats.capacity}
+                                    </span>
+                                </span>
+                            </span>
+                            <span style="font-family: var(--font-mono); text-align: right;">
+                                ${canAfford
+                            ? `<span style="color: var(--gold);">$${cost.toLocaleString()}</span>`
+                            : `<span style="color: var(--rust-red-light);">$${cost.toLocaleString()}</span>`
+                        }
+                            </span>
+                        </button>`;
+                }).join('')}
                 </div>
                 <button id="cancel-train" style="
                     width: 100%; padding: 8px; margin-top: 8px;
@@ -931,18 +949,20 @@ export class GameScene extends Phaser.Scene {
             </div>
         `;
 
-        body.querySelectorAll('.train-buy-btn').forEach(btn => {
+        body.querySelectorAll('.train-buy-btn:not([disabled])').forEach(btn => {
             btn.addEventListener('mouseenter', (e) => {
-                (e.target as HTMLElement).style.borderColor = 'var(--gold-dark)';
-                (e.target as HTMLElement).style.background = 'rgba(212,168,67,0.1)';
+                (e.currentTarget as HTMLElement).style.borderColor = 'var(--gold-dark)';
+                (e.currentTarget as HTMLElement).style.background = 'rgba(212,168,67,0.1)';
             });
             btn.addEventListener('mouseleave', (e) => {
-                (e.target as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
-                (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
+                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.08)';
+                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
             });
             btn.addEventListener('click', () => {
-                const type = btn.getAttribute('data-type') as Train['type'];
-                const train = buyTrain(this.gameState, type, [...this.trainRouteStations]);
+                const locoId = parseInt(btn.getAttribute('data-loco-id') || '0');
+                const loco = meta.ownedLocomotives.find(l => l.instanceId === locoId);
+                if (!loco) return;
+                const train = deployLocomotive(this.gameState, loco, [...this.trainRouteStations]);
                 if (train) {
                     this.trainRouteStations = [];
                     this.updateUI();
@@ -950,7 +970,6 @@ export class GameScene extends Phaser.Scene {
                     this.drawTrains();
                     this.showHexInfo(train.route[0]);
                 } else {
-                    addNotification(this.gameState, '❌', 'Cannot Purchase', 'Insufficient funds.', 'danger');
                     this.renderNotifications();
                 }
             });
@@ -1111,59 +1130,49 @@ export class GameScene extends Phaser.Scene {
         const rpCounter = document.getElementById('research-rp-counter');
         if (!body) return;
 
-        const research = this.gameState.research;
-        if (rpCounter) rpCounter.textContent = `${Math.floor(research.points)} RP`;
+        const meta = loadMeta();
+        if (rpCounter) rpCounter.textContent = `${Math.floor(meta.researchPoints)} RP`;
 
-        const eras: Array<{ id: string; name: string; period: string }> = [
-            { id: 'steam', name: 'Steam Age', period: '1840+' },
-            { id: 'diesel', name: 'Diesel Era', period: '1900+' },
-            { id: 'electric', name: 'Electric Age', period: '1950+' },
-            { id: 'maglev', name: 'Maglev Future', period: '2000+' },
+        const branches: Array<{ id: string; label: string; icon: string }> = [
+            { id: 'locomotives', label: 'Locomotives', icon: '🚂' },
+            { id: 'infrastructure', label: 'Infrastructure', icon: '🛤️' },
+            { id: 'rolling_stock', label: 'Rolling Stock', icon: '🚃' },
         ];
 
-        const getEffectTag = (effect: { type: string; value: string | number }) => {
-            switch (effect.type) {
-                case 'unlock_train': return `<span class="tech-effect-tag train">🚂 ${effect.value}</span>`;
-                case 'speed_bonus': return `<span class="tech-effect-tag speed">⚡ +${effect.value}% speed</span>`;
-                case 'capacity_bonus': return `<span class="tech-effect-tag capacity">📦 +${effect.value}% capacity</span>`;
-                case 'maintenance_reduction': return `<span class="tech-effect-tag maintenance">🔧 -${effect.value}% maint</span>`;
-                case 'revenue_bonus': return `<span class="tech-effect-tag revenue">💰 +${effect.value}% revenue</span>`;
-                case 'unlock_track': return `<span class="tech-effect-tag speed">🛤️ ${effect.value} track</span>`;
-                default: return '';
-            }
-        };
-
-        body.innerHTML = eras.map(era => {
-            const techs = getEraForTech(era.id);
+        body.innerHTML = `
+            <div style="padding: 8px 12px; margin-bottom: 12px; background: rgba(212,168,67,0.08); border-radius: 6px; border: 1px solid rgba(212,168,67,0.15);">
+                <p style="color: var(--text-secondary); font-size: 12px; margin: 0; line-height: 1.4;">📖 <strong style="color: var(--gold-light);">Railway Encyclopedia</strong> — Your unlocked technologies and their history. Purchase new upgrades in the <strong>Upgrade Hub</strong> between levels.</p>
+            </div>
+        ` + branches.map(branch => {
+            const nodes = UPGRADE_TREE.filter(u => u.branch === branch.id);
             return `
                 <div class="tech-era-section">
                     <div class="tech-era-header">
-                        <span class="tech-era-name ${era.id}">${era.name}</span>
-                        <span class="tech-era-badge ${era.id}">${era.period}</span>
+                        <span class="tech-era-name">${branch.icon} ${branch.label}</span>
                     </div>
                     <div class="tech-grid">
-                        ${techs.map((tech: Technology) => {
-                const isUnlocked = research.unlocked.has(tech.id);
-                const check = canResearch(research, tech.id);
-                const isAvailable = check.ok;
-                const stateClass = isUnlocked ? 'unlocked' : isAvailable ? 'available' : 'locked';
+                        ${nodes.map(node => {
+                const isPurchased = meta.purchasedUpgrades.includes(node.id);
+                // loco_t1 (Rocket) is always considered owned
+                const isOwned = isPurchased || node.id === 'loco_t1';
+                const stateClass = isOwned ? 'unlocked' : 'locked';
 
                 return `
-                                <div class="tech-card ${stateClass}" data-tech-id="${tech.id}">
-                                    <div class="tech-card-icon">${tech.icon}</div>
-                                    <div class="tech-card-name">${tech.name}</div>
-                                    <div class="tech-card-desc">${tech.description}</div>
+                                <div class="tech-card ${stateClass}">
+                                    <div class="tech-card-icon">${node.icon}</div>
+                                    <div class="tech-card-name">${node.name}</div>
+                                    <div class="tech-card-year" style="font-size: 11px; color: var(--gold-dark); font-family: var(--font-mono); margin: 2px 0 4px;">${node.yearIntroduced}</div>
+                                    <div class="tech-card-desc">${node.description}</div>
+                                    ${isOwned ? `<div class="tech-card-fact" style="font-size: 11px; color: var(--text-secondary); margin-top: 6px; padding: 6px 8px; background: rgba(212,168,67,0.06); border-left: 2px solid var(--gold-dark); border-radius: 2px; line-height: 1.4;">📜 ${node.historicalFact}</div>` : ''}
                                     <div class="tech-card-effects">
-                                        ${tech.effects.map(e => getEffectTag(e)).join('')}
+                                        ${node.unlocksTrainType ? `<span class="tech-effect-tag train">🚂 Unlocks ${node.unlocksTrainType}</span>` : ''}
+                                        <span class="tech-effect-tag">${node.effect}</span>
                                     </div>
                                     <div class="tech-card-footer">
-                                        ${isUnlocked
-                        ? '<span class="tech-status unlocked">✓ Researched</span>'
-                        : isAvailable
-                            ? `<span class="tech-cost">${tech.cost} RP</span>
-                                                   <button class="tech-unlock-btn" data-unlock-tech="${tech.id}">Research</button>`
-                            : `<span class="tech-cost">${tech.cost} RP</span>
-                                                   <span class="tech-prereq-label">${check.reason || 'Locked'}</span>`
+                                        ${isOwned
+                        ? '<span class="tech-status unlocked">✓ Purchased</span>'
+                        : `<span class="tech-cost">${node.cost} RP</span>
+                                                   <span class="tech-prereq-label">Buy in Upgrade Hub</span>`
                     }
                                     </div>
                                 </div>`;
@@ -1171,25 +1180,6 @@ export class GameScene extends Phaser.Scene {
                     </div>
                 </div>`;
         }).join('');
-
-        // Wire up unlock buttons
-        body.querySelectorAll('[data-unlock-tech]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const techId = btn.getAttribute('data-unlock-tech');
-                if (!techId) return;
-                if (unlockTech(research, techId)) {
-                    const tech = TECH_TREE.find(t => t.id === techId);
-                    if (tech) {
-                        addNotification(this.gameState, tech.icon, 'Tech Unlocked!',
-                            `${tech.name} has been researched!`, 'success');
-                    }
-                    this.renderResearchPanel();
-                    this.updateUI();
-                    this.renderNotifications();
-                }
-            });
-        });
     }
 
     private renderTrainPanel(): void {
@@ -1462,17 +1452,12 @@ export class GameScene extends Phaser.Scene {
 
         if (!met) return;
 
-        // Star rating from config thresholds
+        // Star rating from purely time-based config thresholds
         let stars: 1 | 2 | 3 = 1;
         const t3 = levelDef.stars.three;
         const t2 = levelDef.stars.two;
-        const threeStarMet =
-            (t3.maxMonths === undefined || this.monthsElapsed <= t3.maxMonths) &&
-            (t3.minFunds === undefined || s.funds >= t3.minFunds) &&
-            (t3.minMonthlyNet === undefined || monthlyNet >= t3.minMonthlyNet);
-        const twoStarMet =
-            (t2.minFunds === undefined || s.funds >= t2.minFunds) &&
-            (t2.minMonthlyNet === undefined || monthlyNet >= t2.minMonthlyNet);
+        const threeStarMet = this.monthsElapsed <= t3.maxMonths;
+        const twoStarMet = this.monthsElapsed <= t2.maxMonths;
 
         // A 3-star rating strictly requires the 2-star conditions to also be true.
         if (threeStarMet && twoStarMet) stars = 3;

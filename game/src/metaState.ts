@@ -5,11 +5,16 @@
 
 const META_STORAGE_KEY = 'iron-dominion-mobile-meta';
 
+import type { OwnedLocomotive } from './locomotives';
+import { getTemplate, getUpgradeCost } from './locomotives';
+
 export interface MetaState {
     researchPoints: number;
     purchasedUpgrades: string[];   // array so it survives JSON round-trip
     levelStars: Record<string, 0 | 1 | 2 | 3>;  // key = "ch1_l1"
     careerLevelsComplete: number;
+    ownedLocomotives: OwnedLocomotive[];  // persistent locomotive collection
+    nextLocoId: number;                   // auto-increment ID
 }
 
 export function createMetaState(): MetaState {
@@ -18,6 +23,10 @@ export function createMetaState(): MetaState {
         purchasedUpgrades: [],
         levelStars: {},
         careerLevelsComplete: 0,
+        ownedLocomotives: [
+            { instanceId: 1, templateId: 'rocket', name: "Rocket #1", level: 1 },
+        ],
+        nextLocoId: 2,
     };
 }
 
@@ -29,6 +38,16 @@ export function loadMeta(): MetaState {
         // Safety: ensure arrays exist
         if (!Array.isArray(parsed.purchasedUpgrades)) parsed.purchasedUpgrades = [];
         if (!parsed.levelStars) parsed.levelStars = {};
+        // Migration: add locomotive collection if missing (old saves)
+        if (!Array.isArray(parsed.ownedLocomotives)) {
+            parsed.ownedLocomotives = [
+                { instanceId: 1, templateId: 'rocket', name: "Rocket #1", level: 1 },
+            ];
+            parsed.nextLocoId = 2;
+        }
+        if (!parsed.nextLocoId) parsed.nextLocoId = (parsed.ownedLocomotives.length > 0
+            ? Math.max(...parsed.ownedLocomotives.map(l => l.instanceId)) + 1
+            : 1);
         return parsed;
     } catch {
         return createMetaState();
@@ -92,6 +111,42 @@ export function purchaseUpgrade(meta: MetaState, upgradeId: string, cost: number
 
 export function hasUpgrade(meta: MetaState, upgradeId: string): boolean {
     return meta.purchasedUpgrades.includes(upgradeId);
+}
+
+// ============ Locomotive Purchase & Upgrade ============
+
+export function buyLocomotive(meta: MetaState, templateId: string): OwnedLocomotive | null {
+    const tmpl = getTemplate(templateId);
+    if (!tmpl) return null;
+    if (meta.researchPoints < tmpl.rpCost) return null;
+
+    // Only allow owning one blueprint per template
+    if (meta.ownedLocomotives.some(l => l.templateId === templateId)) return null;
+
+    const loco: OwnedLocomotive = {
+        instanceId: meta.nextLocoId++,
+        templateId,
+        name: tmpl.name, // Just the template name, not "#1"
+        level: 1,
+    };
+
+    meta.researchPoints -= tmpl.rpCost;
+    meta.ownedLocomotives.push(loco);
+    saveMeta(meta);
+    return loco;
+}
+
+export function upgradeLocomotive(meta: MetaState, instanceId: number): boolean {
+    const loco = meta.ownedLocomotives.find(l => l.instanceId === instanceId);
+    if (!loco || loco.level >= 3) return false;
+
+    const cost = getUpgradeCost(loco.templateId, loco.level);
+    if (cost <= 0 || meta.researchPoints < cost) return false;
+
+    meta.researchPoints -= cost;
+    loco.level = (loco.level + 1) as 1 | 2 | 3;
+    saveMeta(meta);
+    return true;
 }
 
 export function getCareerRank(meta: MetaState): { title: string; badge: string; emoji: string } {

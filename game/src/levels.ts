@@ -5,9 +5,9 @@
 // No other files need to change for level content tweaks.
 //
 // STAR RATING PHILOSOPHY:
-//   ⭐     (1 star) — Objective complete, any financial state
-//   ⭐⭐   (2 stars) — Objective complete with positive funds + positive net income
-//   ⭐⭐⭐ (3 stars) — Objective complete within ~33% of time limit + strong finances
+//   ⭐     (1 star) — Objective complete within time limit
+//   ⭐⭐   (2 stars) — Objective complete within ~66% of time limit
+//   ⭐⭐⭐ (3 stars) — Objective complete within ~33% of time limit
 // ============================================
 
 export type ObjectiveType =
@@ -18,18 +18,11 @@ export type ObjectiveType =
     | 'total_revenue';      // Earn $X in cumulative total revenue
 
 export interface StarThresholds {
-    /** 3 stars: must hit ALL of these in addition to the objective */
-    three: {
-        maxMonths?: number;          // Finish within N months (~33% of time limit)
-        minFunds?: number;           // Still have $X left
-        minMonthlyNet?: number;      // Net income/month at time of completion
-    };
-    /** 2 stars: must hit ALL of these */
-    two: {
-        minFunds?: number;           // Still solvent
-        minMonthlyNet?: number;      // Net income positive or better
-    };
-    // 1 star: any completion — no extra conditions
+    /** 3 stars: Finish within N months (~33% of time limit) */
+    three: { maxMonths: number; };
+    /** 2 stars: Finish within N months (~66% of time limit) */
+    two: { maxMonths: number; };
+    // 1 star: any completion before the hard time limit
 }
 
 export interface LevelDefinition {
@@ -83,10 +76,10 @@ export const LEVELS: LevelDefinition[] = [
             label: 'Connect 2 cities',
         },
         stars: {
-            // 3★: fast start, still well-funded, profitable
-            three: { maxMonths: 60, minFunds: 15000, minMonthlyNet: 200 },
-            // 2★: solvent and breaking even
-            two: { minFunds: 0, minMonthlyNet: 0 },
+            // 3★: 60 months (~25% of 240)
+            three: { maxMonths: 60 },
+            // 2★: 120 months (~50% of 240)
+            two: { maxMonths: 120 },
         },
     },
     {
@@ -107,10 +100,10 @@ export const LEVELS: LevelDefinition[] = [
             label: 'Earn $500/month net',
         },
         stars: {
-            // 3★: hit income target early, with strong surpluses
-            three: { maxMonths: 80, minFunds: 10000, minMonthlyNet: 1500 },
-            // 2★: profitable, any funds remaining
-            two: { minFunds: 0, minMonthlyNet: 500 },
+            // 3★: 80 months (~33% of 240)
+            three: { maxMonths: 80 },
+            // 2★: 160 months (~66% of 240)
+            two: { maxMonths: 160 },
         },
     },
     {
@@ -131,10 +124,10 @@ export const LEVELS: LevelDefinition[] = [
             label: 'Build 3 stations',
         },
         stars: {
-            // 3★: built out fast while staying cash-positive
-            three: { maxMonths: 80, minFunds: 8000, minMonthlyNet: 100 },
-            // 2★: still have funds and not losing money
-            two: { minFunds: 0, minMonthlyNet: 0 },
+            // 3★: 80 months (~33% of 240)
+            three: { maxMonths: 80 },
+            // 2★: 160 months (~66% of 240)
+            two: { maxMonths: 160 },
         },
     },
     {
@@ -155,10 +148,10 @@ export const LEVELS: LevelDefinition[] = [
             label: 'Connect 4 cities',
         },
         stars: {
-            // 3★: connected 3 cities quickly, still profitable
-            three: { maxMonths: 100, minFunds: 5000, minMonthlyNet: 500 },
-            // 2★: any funds, not losing money each month
-            two: { minFunds: 0, minMonthlyNet: 0 },
+            // 3★: 60 months (~33% of 180)
+            three: { maxMonths: 60 },
+            // 2★: 120 months (~66% of 180)
+            two: { maxMonths: 120 },
         },
     },
     {
@@ -174,10 +167,10 @@ export const LEVELS: LevelDefinition[] = [
             label: 'Earn $1,000/month net',
         },
         stars: {
-            // 3★: hit income target quickly with a strong surplus
-            three: { maxMonths: 80, minFunds: 12000, minMonthlyNet: 2500 },
-            // 2★: hit exactly $1k/mo, still solvent
-            two: { minFunds: 0, minMonthlyNet: 1000 },
+            // 3★: 80 months (~33% of 240)
+            three: { maxMonths: 80 },
+            // 2★: 160 months (~66% of 240)
+            two: { maxMonths: 160 },
         },
     },
     {
@@ -193,10 +186,10 @@ export const LEVELS: LevelDefinition[] = [
             label: 'Run 2 trains at once',
         },
         stars: {
-            // 3★: running 2 trains early and making money
-            three: { maxMonths: 100, minFunds: 15000, minMonthlyNet: 800 },
-            // 2★: 2 trains running, positive net
-            two: { minFunds: 0, minMonthlyNet: 0 },
+            // 3★: 100 months (~33% of 300)
+            three: { maxMonths: 100 },
+            // 2★: 200 months (~66% of 300)
+            two: { maxMonths: 200 },
         },
     },
     {
@@ -212,10 +205,10 @@ export const LEVELS: LevelDefinition[] = [
             label: 'Connect 4 cities',
         },
         stars: {
-            // 3★: ambitious build completed under 1/3 of time limit
-            three: { maxMonths: 100, minFunds: 5000, minMonthlyNet: 1000 },
-            // 2★: connected 4 cities without going bust
-            two: { minFunds: 0, minMonthlyNet: 0 },
+            // 3★: 100 months (~33% of 300)
+            three: { maxMonths: 100 },
+            // 2★: 200 months (~66% of 300)
+            two: { maxMonths: 200 },
         },
     },
     {
@@ -231,10 +224,10 @@ export const LEVELS: LevelDefinition[] = [
             label: 'Earn $10,000 total revenue',
         },
         stars: {
-            // 3★: hit the revenue target quickly with strong finances
-            three: { maxMonths: 120, minFunds: 20000, minMonthlyNet: 1500 },
-            // 2★: hit revenue, positive net income
-            two: { minFunds: 0, minMonthlyNet: 200 },
+            // 3★: 120 months (~33% of 360)
+            three: { maxMonths: 120 },
+            // 2★: 240 months (~66% of 360)
+            two: { maxMonths: 240 },
         },
     },
     {
@@ -250,10 +243,10 @@ export const LEVELS: LevelDefinition[] = [
             label: 'Earn $2,000/month net',
         },
         stars: {
-            // 3★: dominant performance — $2k/mo hit fast with large war chest
-            three: { maxMonths: 120, minFunds: 30000, minMonthlyNet: 4000 },
-            // 2★: hit exactly $2k/mo, some funds remaining
-            two: { minFunds: 5000, minMonthlyNet: 2000 },
+            // 3★: 120 months (~33% of 360)
+            three: { maxMonths: 120 },
+            // 2★: 240 months (~66% of 360)
+            two: { maxMonths: 240 },
         },
     },
     {
@@ -269,10 +262,10 @@ export const LEVELS: LevelDefinition[] = [
             label: 'Connect 5 cities',
         },
         stars: {
-            // 3★: empire built efficiently — 5 cities under 1/3 of time + empire-level income
-            three: { maxMonths: 160, minFunds: 40000, minMonthlyNet: 4000 },
-            // 2★: 5 cities connected, healthy balance sheet
-            two: { minFunds: 10000, minMonthlyNet: 1000 },
+            // 3★: 160 months (~33% of 480)
+            three: { maxMonths: 160 },
+            // 2★: 320 months (~66% of 480)
+            two: { maxMonths: 320 },
         },
     },
 ];

@@ -5,9 +5,9 @@ import type { HexCoord } from './hex';
 import { hexKey, hexDistance, parseHexKey } from './hex';
 import type { GameMap } from './terrain';
 import { TerrainType, TERRAIN_DATA } from './terrain';
-import type { ResearchState } from './techTree';
-import { createResearchState, getSpeedBonus, getCapacityBonus, getMaintenanceReduction, getRevenueBonus, getUnlockedTrainTypes } from './techTree';
 import type { UpgradeBonuses } from './upgradeTree';
+import type { OwnedLocomotive } from './locomotives';
+import { getLocoStats, getDeployCost, getTemplate, getStarDisplay } from './locomotives';
 
 export interface TrackSegment {
     from: HexCoord;
@@ -28,6 +28,7 @@ export interface Train {
     id: number;
     name: string;
     type: 'freight' | 'passenger' | 'mixed' | 'luxury' | 'mail' | 'express' | 'commuter' | 'bullet' | 'hyperloop';
+    locomotiveId: number;     // instanceId of the OwnedLocomotive deployed
     route: HexCoord[];
     currentSegment: number;
     progress: number;
@@ -61,7 +62,6 @@ export interface GameState {
     selectedHex: HexCoord | null;
     trackBuildStart: HexCoord | null;
     nextTrainId: number;
-    research: ResearchState;
     notifications: GameNotification[];
     upgrades: UpgradeBonuses;  // meta bonuses baked in at level start
 }
@@ -145,6 +145,7 @@ export const DEFAULT_BONUSES: UpgradeBonuses = {
     passengerRevenueMult: 1, mailCapacityMult: 1,
     luxuryRevenueMult: 1, freightCapacityMult: 1,
     maglevRevenueMult: 1, dieselCostMult: 1, dieselRevenueMult: 1,
+    revenueMult: 1,
 };
 
 export function createGameState(map: GameMap, upgrades: UpgradeBonuses = DEFAULT_BONUSES): GameState {
@@ -184,7 +185,6 @@ export function createGameState(map: GameMap, upgrades: UpgradeBonuses = DEFAULT
         selectedHex: null,
         trackBuildStart: null,
         nextTrainId: 1,
-        research: createResearchState(),
         notifications: [],
         upgrades,
     };
@@ -233,7 +233,10 @@ export function canBuildStation(state: GameState, hex: HexCoord): { ok: boolean;
     if (state.stations.has(key)) return { ok: false, cost: 0, reason: 'Station already here' };
 
     const terrain = state.map.terrain.get(key);
-    if (!terrain || terrain === TerrainType.Water || terrain === TerrainType.Mountains) {
+    const hasResource = state.map.resources.has(key);
+
+    // Disallow water entirely. Disallow mountains UNLESS they contain a resource (e.g. iron)
+    if (!terrain || terrain === TerrainType.Water || (terrain === TerrainType.Mountains && !hasResource)) {
         return { ok: false, cost: 0, reason: 'Cannot build station here' };
     }
 
@@ -334,27 +337,15 @@ export function findTrackPath(state: GameState, from: HexCoord, to: HexCoord): H
     return null;
 }
 
-export function buyTrain(state: GameState, type: Train['type'], routeStations: HexCoord[]): Train | null {
-    const costMap: Record<string, number> = {
-        freight: COSTS.trainFreight,
-        passenger: COSTS.trainPassenger,
-        mixed: COSTS.trainMixed,
-        luxury: COSTS.trainLuxury,
-        mail: COSTS.trainMail,
-        express: COSTS.trainExpress,
-        commuter: COSTS.trainCommuter,
-        bullet: COSTS.trainBullet,
-        hyperloop: COSTS.trainHyperloop,
-    };
-    const cost = costMap[type] ?? 5000;
-    if (state.funds < cost) return null;
+export function deployLocomotive(state: GameState, loco: OwnedLocomotive, routeStations: HexCoord[]): Train | null {
     if (routeStations.length < 2) return null;
 
-    // Check tech unlock
-    const unlocked = getUnlockedTrainTypes(state.research);
-    if (!unlocked.includes(type)) {
-        addNotification(state, '🔒', 'Tech Required',
-            `Research the required technology to unlock ${type} trains!`, 'danger');
+    const stats = getLocoStats(loco);
+    const opFee = getDeployCost(stats.trainType);
+
+    if (state.funds < opFee) {
+        addNotification(state, '❌', 'Insufficient Funds',
+            `Need $${opFee.toLocaleString()} to purchase ${loco.name}.`, 'danger');
         return null;
     }
 
@@ -374,27 +365,30 @@ export function buyTrain(state: GameState, type: Train['type'], routeStations: H
         }
     }
 
-    const config = TRAIN_CONFIGS[type];
-    const speedBonus = 1 + getSpeedBonus(state.research) / 100;
-    const capBonus = 1 + getCapacityBonus(state.research) / 100;
+    const tmpl = getTemplate(loco.templateId);
+    const starStr = getStarDisplay(loco.level);
+    const locomotiveCount = state.trains.filter(t => t.locomotiveId === loco.instanceId).length;
+
     const train: Train = {
         id: state.nextTrainId++,
-        name: `${type.charAt(0).toUpperCase() + type.slice(1)} ${state.nextTrainId - 1}`,
-        type,
+        name: `${loco.name} #${locomotiveCount + 1} ${starStr}`,
+        type: stats.trainType,
+        locomotiveId: loco.instanceId,
         route: fullRoute,
         currentSegment: 0,
         progress: 0,
-        speed: config.speed * speedBonus,
-        capacity: Math.floor(config.capacity * capBonus),
+        speed: stats.speed,
+        capacity: stats.capacity,
         cargo: {},
         revenue: 0,
-        maintenanceCost: config.maintenance,
-        color: config.color,
+        maintenanceCost: stats.maintenance,
+        color: stats.color,
     };
 
     state.trains.push(train);
-    state.funds -= cost;
-    addNotification(state, '🚂', 'Train Purchased', `${train.name} is ready to roll!`, 'success');
+    state.funds -= opFee;
+    addNotification(state, tmpl?.icon ?? '🚂', 'Train Purchased',
+        `${train.name} purchased! Cost: $${opFee.toLocaleString()}`, 'success');
     return train;
 }
 
@@ -435,16 +429,15 @@ export function updateTrains(state: GameState, delta: number): void {
                 train.currentSegment = 0;
 
                 const routeLength = train.route.length;
-                const revBonus = 1 + getRevenueBonus(state.research) / 100;
                 const u = state.upgrades;
                 // Base type multiplier
                 let typeMultiplier = train.type === 'hyperloop' ? 5 : train.type === 'bullet' ? 4 : train.type === 'luxury' ? 3 : train.type === 'express' ? 2.5 : train.type === 'passenger' ? 2 : train.type === 'commuter' ? 1.5 : 1;
-                // Apply carriage upgrade bonuses
+                // Apply upgrade bonuses
                 if (train.type === 'passenger') typeMultiplier *= u.passengerRevenueMult;
                 if (train.type === 'luxury') typeMultiplier *= u.luxuryRevenueMult;
                 if (train.type === 'mixed') typeMultiplier *= u.dieselRevenueMult;
                 if (train.type === 'bullet' || train.type === 'hyperloop') typeMultiplier *= u.maglevRevenueMult;
-                const baseRevenue = Math.floor(routeLength * 100 * typeMultiplier * revBonus);
+                const baseRevenue = Math.floor(routeLength * 100 * typeMultiplier * u.revenueMult);
                 train.revenue += baseRevenue;
                 state.monthlyIncome += baseRevenue;
                 state.totalRevenue += baseRevenue;
@@ -463,9 +456,8 @@ export function updateTrains(state: GameState, delta: number): void {
 }
 
 export function updateEconomy(state: GameState): void {
-    // Apply maintenance reduction from tech tree + meta upgrade
-    const techMaintReduction = 1 - getMaintenanceReduction(state.research) / 100;
-    const maintReduction = techMaintReduction * state.upgrades.maintenanceMult;
+    // Apply maintenance reduction from meta upgrades
+    const maintReduction = state.upgrades.maintenanceMult;
 
     // Calculate this month's maintenance costs
     let totalMaintenance = 0;
@@ -511,13 +503,16 @@ export function advanceTime(state: GameState): void {
 
         if (state.year >= 1900 && state.era === 'steam') {
             state.era = 'diesel';
-            addNotification(state, '🚃', 'New Era!', 'The Diesel Era has begun!', 'warning');
+            addNotification(state, '⛽', 'The Diesel Revolution!',
+                'Internal combustion engines end the age of steam. Maintenance costs drop — no more water stops, no more ash pits. The Pioneer Zephyr showed the way in 1934.', 'warning');
         } else if (state.year >= 1950 && state.era === 'diesel') {
             state.era = 'electric';
-            addNotification(state, '⚡', 'New Era!', 'The Electric Era has begun!', 'warning');
+            addNotification(state, '⚡', 'The Electric Age Dawns!',
+                'France\'s BB 9004 hit 331 km/h in 1955. Clean, powerful electric traction transforms railways — opening the door to high-speed rail and urban metro networks.', 'warning');
         } else if (state.year >= 2000 && state.era === 'electric') {
             state.era = 'maglev';
-            addNotification(state, '🚄', 'New Era!', 'The Maglev Era has begun!', 'warning');
+            addNotification(state, '🌿', 'The Modern Era!',
+                'Digital signalling, hydrogen fuel cells, and battery-electric trains define the future. Railways must decarbonise — the N700S, Coradia iLint, and FLIRT Akku lead the way.', 'warning');
         }
     }
 
@@ -547,7 +542,7 @@ export function getMonthName(month: number): string {
 }
 
 export function getEraLabel(era: GameState['era']): string {
-    return { steam: 'Steam Era', diesel: 'Diesel Era', electric: 'Electric Era', maglev: 'Maglev Era' }[era];
+    return { steam: 'Steam Era', diesel: 'Diesel Era', electric: 'Electric Era', maglev: 'Modern Era' }[era];
 }
 
 export function formatMoney(amount: number): string {
