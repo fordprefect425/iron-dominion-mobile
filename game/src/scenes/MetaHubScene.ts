@@ -25,10 +25,14 @@ export class MetaHubScene extends Phaser.Scene {
             }, 300);
         }
 
+        // Restore mute preference — default muted on first launch, then respect player's choice
+        const savedMute = localStorage.getItem('iron-dominion-mute');
+        this.sound.mute = savedMute === null ? true : savedMute === 'true';
+        this.syncMuteIcon();
+
         // Play hub music if not already playing
         if (!this.sound.get('bgm_menu') || !this.sound.get('bgm_menu')?.isPlaying) {
             this.sound.stopAll();
-            this.sound.mute = true; // Mute by default per user request
             this.sound.add('bgm_menu', { loop: true, volume: 0.5 }).play();
         }
 
@@ -96,6 +100,7 @@ export class MetaHubScene extends Phaser.Scene {
                 <button class="hub-nav-btn" id="hub-upgrade-btn">🔬 Upgrade Hub</button>
                 <button class="hub-nav-btn secondary" id="hub-sandbox-btn">🗺️ Free Play</button>
                 <button class="hub-nav-btn exit-btn" id="hub-exit-btn">✕ Exit Game</button>
+                <button class="hub-nav-btn secondary" id="hub-mute-btn" title="Toggle Audio"><span id="mute-icon">${this.sound.mute ? '🔇' : '🔊'}</span> Audio</button>
             </div>
         </div>
 
@@ -114,6 +119,7 @@ export class MetaHubScene extends Phaser.Scene {
         // Level buttons
         container.querySelectorAll('.hub-level-btn:not([disabled])').forEach(btn => {
             btn.addEventListener('click', () => {
+                this.playClick();
                 const levelId = btn.getAttribute('data-level') ?? '';
                 this.launchLevel(levelId);
             });
@@ -121,12 +127,14 @@ export class MetaHubScene extends Phaser.Scene {
 
         // Upgrade Hub
         document.getElementById('hub-upgrade-btn')?.addEventListener('click', () => {
+            this.playClick();
             container.style.display = 'none';
             this.scene.start('UpgradeHubScene');
         });
 
         // Free Play (original sandbox mode)
         document.getElementById('hub-sandbox-btn')?.addEventListener('click', () => {
+            this.playClick();
             container.style.display = 'none';
             if (gameOverlay) gameOverlay.style.display = '';
             this.scene.start('GameScene', { levelId: null, freePlay: true });
@@ -134,16 +142,49 @@ export class MetaHubScene extends Phaser.Scene {
 
         // Exit Game
         document.getElementById('hub-exit-btn')?.addEventListener('click', () => {
+            this.playClick();
             const dialog = document.getElementById('exit-dialog');
             if (dialog) dialog.style.display = 'flex';
         });
         document.getElementById('exit-cancel')?.addEventListener('click', () => {
+            this.playClick();
             const dialog = document.getElementById('exit-dialog');
             if (dialog) dialog.style.display = 'none';
         });
         document.getElementById('exit-confirm')?.addEventListener('click', () => {
             this.exitGame();
         });
+
+        // Mute toggle (hub-level, persisted to localStorage)
+        document.getElementById('hub-mute-btn')?.addEventListener('click', () => {
+            this.sound.mute = !this.sound.mute;
+            localStorage.setItem('iron-dominion-mute', String(this.sound.mute));
+            this.syncMuteIcon();
+        });
+    }
+
+    private syncMuteIcon(): void {
+        const icon = document.getElementById('mute-icon');
+        if (icon) icon.textContent = this.sound.mute ? '🔇' : '🔊';
+    }
+
+    private playClick(): void {
+        if (this.sound.mute) return;
+        // Re-use the cached sfx_ui_click if GameScene already loaded it,
+        // otherwise play a quick inline tone via Web Audio as a fallback
+        const existing = this.sound.get('sfx_ui_click');
+        if (existing) { existing.play(); return; }
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const ctx = new ((window as any).AudioContext || (window as any).webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.frequency.value = 900;
+            gain.gain.setValueAtTime(0.15, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+            osc.start(); osc.stop(ctx.currentTime + 0.08);
+        } catch { /* silence fallback failures */ }
     }
 
     private launchLevel(levelId: string): void {

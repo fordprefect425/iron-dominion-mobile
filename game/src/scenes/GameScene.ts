@@ -186,6 +186,12 @@ export class GameScene extends Phaser.Scene {
             this.sfx[key] = this.sound.add(`sfx_${key}`, { volume: 0.7 });
         }
 
+        // Restore persisted mute preference and sync in-game icon
+        const savedMute = localStorage.getItem('iron-dominion-mute');
+        this.sound.mute = savedMute === null ? true : savedMute === 'true';
+        const muteIconEl = document.getElementById('mute-icon');
+        if (muteIconEl) muteIconEl.textContent = this.sound.mute ? '🔇' : '🔊';
+
         // Stop any hub music if coming from MetaHub
         this.sound.stopAll();
 

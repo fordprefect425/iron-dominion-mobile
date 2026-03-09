@@ -70,19 +70,21 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-// Handle Mute Button globally
+// Handle Mute Button globally (in-game HUD)
 const btnMute = document.getElementById('btn-mute');
-const muteIcon = document.getElementById('mute-icon');
-if (btnMute && muteIcon) {
+if (btnMute) {
   btnMute.addEventListener('click', (e) => {
     e.preventDefault();
     if (!game.sound) return;
 
-    // Toggle global mute state
+    // Toggle global mute state and persist preference
     game.sound.mute = !game.sound.mute;
+    localStorage.setItem('iron-dominion-mute', String(game.sound.mute));
 
-    // Update icon
-    muteIcon.textContent = game.sound.mute ? '🔇' : '🔊';
+    // Sync whichever mute-icon element is currently visible
+    document.querySelectorAll('#mute-icon').forEach(el => {
+      el.textContent = game.sound.mute ? '🔇' : '🔊';
+    });
   });
 }
 
