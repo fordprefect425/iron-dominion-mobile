@@ -153,8 +153,8 @@ export class GameScene extends Phaser.Scene {
             this.showObjectiveBadge();
         }
 
-        addNotification(this.gameState, '🎉', 'Welcome, Tycoon!', 'Build your railway empire. Start by placing a station near a city.', 'info');
-        this.renderNotifications();
+        // Open the info panel on load so players see the welcome/hint content
+        document.getElementById('info-panel')?.classList.remove('collapsed');
 
         // Start Audio
         this.bgmSteam = this.sound.add('bgm_steam', { loop: true });
