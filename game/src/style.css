@@ -594,14 +594,14 @@ body {
 }
 
 /* ============================================
-   INFO PANEL (RIGHT SIDEBAR)
+   INFO PANEL (RIGHT SIDEBAR — desktop default)
    ============================================ */
 #info-panel {
     position: absolute;
-    top: 64px;
+    top: 72px;
     right: 0;
     width: 320px;
-    bottom: 96px;
+    bottom: 100px;
     background: var(--coal);
     border-left: 2px solid var(--gold-dark);
     border-top: 2px solid var(--gold-dark);
@@ -724,7 +724,7 @@ kbd {
    ============================================ */
 #notifications-container {
     position: absolute;
-    top: 64px;
+    top: 72px;
     right: var(--space-lg);
     width: 320px;
     display: flex;
@@ -870,7 +870,7 @@ kbd {
    ============================================ */
 .cost-preview {
     position: absolute;
-    bottom: 96px;
+    bottom: 108px;
     left: 50%;
     transform: translateX(-50%);
     padding: var(--space-sm) var(--space-lg);
@@ -1189,6 +1189,12 @@ kbd {
 /* ============================================
    TECH TREE / RESEARCH PANEL
    ============================================ */
+/* Research modal - wider than default */
+.research-modal-content {
+    width: 700px;
+    max-height: 85dvh;
+}
+
 .rp-counter {
     font-family: var(--font-mono);
     font-size: 14px;
@@ -1533,95 +1539,94 @@ kbd {
     /* ============================================
    MOBILE RESPONSIVENESS (<= 800px)
    ============================================ */
-}
 
-/* Info Panel Sidebar */
-#info-panel {
-    top: auto;
-    bottom: 70px;
-    /* Above action bar */
-    height: 60vh;
-    width: 100%;
-    max-width: 100%;
-    right: 0;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    border: 1px solid var(--panel-border);
-    border-bottom: none;
-    background: rgba(44, 44, 52, 0.98);
-    transform: translateY(0);
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 60;
-    overflow: visible;
-    /* Prevent clipping */
-    pointer-events: auto;
-}
+    /* Info Panel: full-width bottom sheet on mobile */
+    #info-panel {
+        top: auto;
+        bottom: max(70px, calc(env(safe-area-inset-bottom) + 62px));
+        /* Above action bar, clearing home indicator */
+        height: 60dvh;
+        width: 100%;
+        max-width: 100%;
+        right: 0;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        border: 1px solid var(--panel-border);
+        border-bottom: none;
+        background: rgba(44, 44, 52, 0.98);
+        transform: translateY(0);
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 60;
+        overflow: visible;
+        pointer-events: auto;
+    }
 
-#info-panel.collapsed {
-    transform: translateY(calc(100% + 70px));
-}
+    #info-panel.collapsed {
+        transform: translateY(calc(100% + 70px));
+    }
 
-#info-panel:not(.collapsed) {
-    transform: translateY(0);
-}
+    #info-panel:not(.collapsed) {
+        transform: translateY(0);
+    }
 
-.panel-content {
-    padding-left: var(--space-lg);
-}
+    .panel-content {
+        padding-left: var(--space-lg);
+    }
 
-/* Modals (Research / Trains) */
-.modal-panel-content {
-    width: 95vw !important;
-    max-height: 85vh;
-    border-radius: var(--radius-lg);
-}
+    /* Modals (Research / Trains) */
+    .modal-panel-content {
+        width: 95vw !important;
+        max-height: 85dvh;
+        border-radius: var(--radius-lg);
+    }
 
-.modal-close-btn {
-    min-width: 44px;
-    min-height: 44px;
-    font-size: 20px;
-}
+    .modal-close-btn {
+        min-width: 44px;
+        min-height: 44px;
+        font-size: 20px;
+    }
 
-.train-card-stats {
-    grid-template-columns: repeat(2, 1fr);
-}
+    .train-card-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
 
-.tech-grid {
-    grid-template-columns: 1fr;
-}
+    .tech-grid {
+        grid-template-columns: 1fr;
+    }
 
-.tech-card {
-    padding: var(--space-lg);
-}
+    .tech-card {
+        padding: var(--space-lg);
+    }
 
-.tech-unlock-btn {
-    min-height: 44px;
-    min-width: 80px;
-    padding: 0 16px;
-}
+    .tech-unlock-btn {
+        min-height: 44px;
+        min-width: 80px;
+        padding: 0 16px;
+    }
 
-/* Minimap */
-#minimap-container {
-    width: 120px;
-    height: 90px;
-    bottom: 70px;
-    right: var(--space-sm);
-    z-index: 10;
-}
+    /* Minimap */
+    #minimap-container {
+        width: 120px;
+        height: 90px;
+        bottom: 70px;
+        right: var(--space-sm);
+        z-index: 10;
+    }
 
-/* Notifications */
-#notifications-container {
-    top: 120px;
-    right: 50%;
-    transform: translateX(50%);
-    width: calc(100vw - 32px);
-}
+    /* Notifications */
+    #notifications-container {
+        top: 120px;
+        right: 50%;
+        transform: translateX(50%);
+        width: calc(100vw - 32px);
+    }
 
-.notification {
-    padding: var(--space-md);
-}
+    .notification {
+        padding: var(--space-md);
+    }
 
-.mobile-hide {
-    display: none !important;
+    .mobile-hide {
+        display: none !important;
+    }
 }
 
 /* ============================================
@@ -1753,7 +1758,7 @@ kbd {
 
 .hub-level-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     gap: 12px;
 }
 
@@ -2912,7 +2917,7 @@ kbd {
 
 #action-dock-container {
     position: absolute;
-    bottom: var(--space-lg);
+    bottom: max(var(--space-lg), env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -3097,24 +3102,26 @@ kbd {
     }
 
     #speed-controls-panel .speed-btn {
-        font-size: 11px;
+        font-size: 12px;
         padding: 4px 6px;
-        min-width: 26px;
-        min-height: 26px;
+        min-width: 44px;
+        min-height: 44px;
     }
 
     .action-btn-small {
-        width: 32px;
-        height: 32px;
-        font-size: 14px;
+        width: 44px;
+        height: 44px;
+        font-size: 16px;
     }
 
     /* Bottom dock on mobile */
     #action-dock-container {
-        bottom: var(--space-sm);
+        bottom: max(var(--space-sm), env(safe-area-inset-bottom));
         width: calc(100% - var(--space-sm) * 2);
         left: var(--space-sm);
         transform: none;
+        /* Ensure dock clears the home indicator on notched devices */
+        padding-bottom: 0;
     }
 
     .premium-action-dock {
@@ -3126,7 +3133,7 @@ kbd {
     }
 
     .dock-btn {
-        min-width: 0;
+        min-width: 44px;
         flex: 1;
         padding: 6px 4px;
         min-height: 56px;
@@ -3147,5 +3154,131 @@ kbd {
 
     .action-dock-title {
         display: none;
+    }
+}
+
+/* ============================================
+   EXTRA SMALL SCREENS (max-width: 400px)
+   For phones like iPhone SE, older Androids
+   ============================================ */
+@media (max-width: 400px) {
+    /* Loading screen — shrink title */
+    .loading-title {
+        font-size: 36px;
+        letter-spacing: 2px;
+    }
+
+    .loading-train-icon {
+        font-size: 52px;
+    }
+
+    .loading-bar-container {
+        width: 90vw;
+    }
+
+    /* Top HUD: tighter spacing */
+    #top-hud-container {
+        padding: 2px var(--space-xs);
+        gap: 4px;
+    }
+
+    .top-hud-floating-left .era-badge {
+        font-size: 9px;
+        padding: 2px 6px;
+    }
+
+    .top-hud-floating-left .date-display {
+        font-size: 10px;
+    }
+
+    /* Resource pill — tiny screens */
+    #top-bar-center.premium-hud-panel {
+        height: 36px;
+        padding: 0 var(--space-xs);
+    }
+
+    .resource-block .resource-value {
+        font-size: 12px;
+    }
+
+    .resource-block .resource-label {
+        font-size: 7px;
+    }
+
+    .resource-divider {
+        height: 22px;
+    }
+
+    /* Speed controls — still 44px tap targets but smaller icons */
+    #speed-controls-panel .speed-btn {
+        font-size: 10px;
+        min-width: 36px;
+        min-height: 36px;
+    }
+
+    /* Action dock — smaller icons/labels */
+    .dock-icon {
+        font-size: 17px;
+    }
+
+    .dock-label {
+        font-size: 7px;
+    }
+
+    .dock-btn {
+        min-height: 48px;
+        padding: 5px 2px;
+    }
+
+    /* Level complete card — reduce padding */
+    .level-complete-card {
+        padding: 20px 20px;
+        gap: 12px;
+    }
+
+    .lc-title-badge {
+        font-size: 20px;
+    }
+
+    .lc-title {
+        font-size: 22px;
+    }
+
+    .lc-icon {
+        font-size: 38px;
+    }
+
+    /* Level failed card */
+    .level-failed-card {
+        padding: 20px 20px;
+        gap: 12px;
+    }
+
+    .lf-title {
+        font-size: 22px;
+    }
+
+    .lf-icon {
+        font-size: 38px;
+    }
+
+    /* Hub level grid — 2 columns on tiny screens */
+    .hub-level-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .hub-level-btn {
+        padding: 12px 8px;
+    }
+
+    /* Exit dialog */
+    .exit-dialog-card {
+        padding: 24px 20px;
+    }
+
+    /* Research/Train modal — full height */
+    .modal-panel-content {
+        max-height: 92dvh !important;
     }
 }
